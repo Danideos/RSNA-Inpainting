@@ -9,6 +9,9 @@ os.environ['TORCH_USE_CUDA_DSA'] = '1'
 import streamlit as st
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
+if 'is_initialized' not in st.session_state:
+    st.session_state.is_initialized = False
+
 from app.loader import Loader
 from app.show_images import show_image
 from app.utils.slider_utils import get_slider_parameters, get_square_and_mask
@@ -28,7 +31,10 @@ def display_image_selector():
     img_size = 256
     square_lengths = [48, 32, 16, 8]
     # Initialize streamlit states
-    initialize_states(square_lengths=square_lengths, img_size=img_size)
+    if not st.session_state.is_initialized:
+        initialize_states(square_lengths=square_lengths, img_size=img_size)
+        Loader.load_config()
+        st.session_state.is_initialized = True
 
     loader = Loader(image_size=img_size) 
     with middle:

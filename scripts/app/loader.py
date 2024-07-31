@@ -40,7 +40,7 @@ class Loader:
         return contour_array
     
     @staticmethod
-    def save_config():
+    def save_config(grid_key):
         config_data = {}
         for grid_key, squares in st.session_state['all_inpainted_square_images'].items():
             config_data[grid_key] = {}
@@ -52,7 +52,7 @@ class Loader:
                         'inpainting_parameters': data['parameters'][-1]
                     }
         config_save_dir = os.getenv("CONFIG_SAVE_DIR")
-        config_file_name = f'config_squareLength{grid_key[0]}_offset{grid_key[1]}_denoiseStart{data["parameters"][-1][0]}.pkl'
+        config_file_name = f'config.pkl'
         config_save_path = os.path.join(config_save_dir, config_file_name)
         with open(config_save_path, 'wb') as f:
             pickle.dump(config_data, f)
@@ -79,7 +79,7 @@ class Loader:
                         square_key,
                         inpainted_square=data['inpainted_square_image'],
                         metrics=data['metrics'],
-                        inpainting_parameters=data['inpainting_parameters']
+                        inpaint_parameters=data['inpainting_parameters']
                     )
             st.success('Configuration loaded successfully.')
         else:

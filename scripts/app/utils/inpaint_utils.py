@@ -1,5 +1,6 @@
 from inpaint import inpaint_square, inpaint_grid
 from app.utils.metric_utils import calculate_square_metrics, calculate_grid_metrics
+from app.utils.general_utils import get_keys
 from app.loader import Loader
 
 import streamlit as st
@@ -16,7 +17,8 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
             if st.button('Inpaint Grid'):
                 inpaint_grid(image_path, img_size, square, offset, inpaint_parameters=inpaint_parameters)
                 calculate_grid_metrics(image, image_path, square, offset)
-                Loader.save_config()
+                grid_key, _ = get_keys(square, offset)
+                Loader.save_config(grid_key)
                 st.rerun()
         
             if st.button('Toggle Inpainted Square'):

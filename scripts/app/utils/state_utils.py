@@ -17,22 +17,22 @@ def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
             for offset in [0, 1, 2, 3]:
                 grid_key = (square_length, offset)
                 st.session_state['all_inpainted_square_images'][grid_key] = {}
-                st.session_state['inpainting_settings'][grid_key] = {}
+                st.session_state['inpainting_settings'][grid_key] = {}    
 
 def init_inpainted_square(grid_key, square_key):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         st.session_state['all_inpainted_square_images'][grid_key][square_key] = {}
     st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': []}
 
-def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpainting_parameters=None):
+def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         init_inpainted_square(grid_key, square_key)
     if inpainted_square:
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'].append(inpainted_square)
     if metrics:
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'].append(metrics)
-    if inpainting_parameters:
-        st.session_state['all_inpainted_square_images'][grid_key][square_key]['parameters'].append(inpainting_parameters)
+    if inpaint_parameters:
+        st.session_state['all_inpainted_square_images'][grid_key][square_key]['parameters'].append(inpaint_parameters)
     if index:
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] = index
     elif len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) == 1:
