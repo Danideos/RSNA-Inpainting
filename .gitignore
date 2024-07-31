@@ -1,0 +1,12 @@
+.vscode/*
+outputs/*
+series_label_counts_test.pkl
+series_to_slices_test.pkl
+.env
+scripts/testing/*
+scripts/CT_BET_GPU/*
+scripts/PytorchUtils/*
+scripts/PytorchUtils
+scripts/mediffusion/*
+**/__pycache__/*
+__pycache__/

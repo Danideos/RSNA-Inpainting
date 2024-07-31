@@ -1,0 +1,40 @@
+runs:
+  - preprocessed_dir: "/research/Data/DK_RSNA_HM/prepared_data/healthy/parameter_training/"
+    output_dir: "/research/Data/DK_RSNA_HM/results/"
+    num_images: 50
+    use_cpu: false
+    square_length: 8
+    divisibility_factor: 2
+    resample_steps: 10
+    inference_protocol: "DDIM100"
+    average: 1 
+    batch_size: 50
+    jump_length: 10
+    offset: false
+
+  # - preprocessed_dir: "/research/Data/DK_RSNA_HM/prepared_data/unhealthy/parameter_training/"
+  #   output_dir: "/research/Data/DK_RSNA_HM/results/"
+  #   num_images: 50
+  #   use_cpu: false
+  #   square_length: 8
+  #   divisibility_factor: 3
+  #   resample_steps: 10
+  #   inference_protocol: "DDIM100"
+  #   average: 1 
+  #   batch_size: 50
+  #   jump_length: 1
+  #   offset: false
+  
+  # - preprocessed_dir: "/research/Data/DK_RSNA_HM/prepared_data/healthy/parameter_training/"
+  #   output_dir: "/research/Data/DK_RSNA_HM/results/"
+  #   num_images: 8
+  #   use_cpu: false
+  #   square_length: 24
+  #   divisibility_factor: 2
+  #   resample_steps: 1
+  #   inference_protocol: "DDIM100"
+  #   average: 1 
+  #   batch_size: 8
+  #   jump_length: 1
+  #   offset: true
+
