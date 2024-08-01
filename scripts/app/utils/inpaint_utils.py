@@ -18,8 +18,14 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
                 inpaint_grid(image_path, img_size, square, offset, inpaint_parameters=inpaint_parameters)
                 calculate_grid_metrics(image, image_path, square, offset)
                 grid_key, _ = get_keys(square, offset)
-                Loader.save_config(grid_key)
                 st.rerun()
         
             if st.button('Toggle Inpainted Square'):
                 st.session_state['show_inpainted_square'] = not st.session_state['show_inpainted_square']
+
+            save_path = st.text_input('Enter the path to save configuration:')
+            if st.button('Save Configuration'):
+                if save_path:
+                    Loader.save_config(grid_key, save_path)
+                else:
+                    st.error('Please enter a valid save path.')

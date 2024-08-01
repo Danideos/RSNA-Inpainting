@@ -1,9 +1,28 @@
 from app.utils.general_utils import is_square_inpainted
 from app.mask import overlay_mask
 from app.utils.general_utils import get_keys
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 import streamlit as st
 
+
+def generate_histogram_plot(original_histogram_values, inpainted_histogram_values):
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.hist(original_histogram_values, bins=80, range=(0, 80), alpha=0.5, label='Original')
+    ax.hist(inpainted_histogram_values, bins=80, range=(0, 80), alpha=0.5, label='Inpainted')
+    ax.set_xlabel('Value', size=14)
+    ax.set_ylabel('Count', size=14)
+    ax.set_title('Overlapping Histogram')
+    ax.legend(loc='upper right')
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+
+    plt.close(fig)
+
+    return buf
 
 def show_image(image, square, mask, offset, middle_col, right_col):
     grid_key, square_key = get_keys(square, offset)
@@ -35,8 +54,12 @@ def show_image(image, square, mask, offset, middle_col, right_col):
                     expanded = True if i == index else False
                     with st.expander(f"Metrics for inpainted index {i}", expanded=expanded):
                         metrics = st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'][i]
+                        # Generate the histogram plot if it doesn't exist
+                        if metrics['histogram_image'] is None:
+                            metrics['histogram_image'] = generate_histogram_plot(metrics['original_histogram_data'], metrics['inpainted_histogram_data'])
+                        
                         st.image(metrics['histogram_image'], caption="Histogram Comparison")
-                        # st.write(f"LPIPS: {metrics['lpips']}")
+                        st.write(f"LPIPS: {metrics['lpips']}")
                         st.write(f"Mean Difference: {metrics['mean_diff']}")
                         st.write(f"KL Divergence: {metrics['kl_div']}")
                  

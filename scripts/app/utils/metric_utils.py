@@ -32,23 +32,6 @@ def calculate_lpips(original_array, inpainted_array, min_size=32):
     lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
     return lpips_value
 
-def create_histogram_plot(original_histogram_values, inpainted_histogram_values):
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.hist(original_histogram_values, bins=80, range=(0, 80), alpha=0.5, label='Original')
-    ax.hist(inpainted_histogram_values, bins=80, range=(0, 80), alpha=0.5, label='Inpainted')
-    ax.set_xlabel('Value', size=14)
-    ax.set_ylabel('Count', size=14)
-    ax.set_title('Overlapping Histogram')
-    ax.legend(loc='upper right')
-
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-
-    plt.close(fig)
-
-    return buf
-
 def calculate_square_metrics(image, image_path, square, offset):
     inpainted_x, inpainted_y, square_length = square
     grid_key, square_key = get_keys(square, offset)
@@ -66,30 +49,31 @@ def calculate_square_metrics(image, image_path, square, offset):
 
     # Ensure both images have 3 channels
     original_array, inpainted_array = ensure_3_channels(original_square, inpainted_square)
-    # lpips_value = calculate_lpips(original_array, inpainted_array)
+    lpips_value = calculate_lpips(original_array, inpainted_array)
 
     # Apply histogram calculation only to the white pixels in the contour mask
     mask = (contour_square == 255)
     original_scaled = (original_array.astype(np.float32) / 255.0) * 80
     inpainted_scaled = (inpainted_array.astype(np.float32) / 255.0) * 80
-
     original_histogram_values = original_scaled[mask].flatten()
     inpainted_histogram_values = inpainted_scaled[mask].flatten()
 
-    buf = create_histogram_plot(original_histogram_values, inpainted_histogram_values)
+    original_hist, _ = np.histogram(original_histogram_values, bins=80, range=(0, 80), density=True)
+    inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=True)
+    # buf = create_histogram_plot(original_histogram_values, inpainted_histogram_values)
 
     # Calculate difference in means
     mean_diff = np.abs(np.mean(original_histogram_values) - np.mean(inpainted_histogram_values))
     
     # Calculate KL divergence
-    original_hist, _ = np.histogram(original_histogram_values, bins=80, range=(0, 80), density=True)
-    inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=True)
     kl_div = entropy(original_hist + 1e-10, inpainted_hist + 1e-10)  # Add small value to avoid division by zero
 
     # Store metrics with square key
     metrics = {
-        # "lpips": lpips_value.item(),
-        "histogram_image": buf,
+        "lpips": lpips_value.item(),
+        "original_histogram_data": original_histogram_values,
+        "inpainted_histogram_data": inpainted_histogram_values,
+        "histogram_image": None,
         "mean_diff": mean_diff,
         "kl_div": kl_div,
     }

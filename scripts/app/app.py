@@ -21,7 +21,7 @@ from app.utils.inpaint_utils import handle_inpaint_toggle_buttons
 
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 def display_image_selector():
@@ -33,7 +33,7 @@ def display_image_selector():
     # Initialize streamlit states
     if not st.session_state.is_initialized:
         initialize_states(square_lengths=square_lengths, img_size=img_size)
-        Loader.load_config()
+        # Loader.load_config()
         st.session_state.is_initialized = True
 
     loader = Loader(image_size=img_size) 

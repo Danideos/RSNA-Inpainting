@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-config_path = os.getenv('CONFIG_PATH')
+config_path = os.getenv('MODEL_CONFIG_PATH')
 model_path = os.getenv('MODEL_PATH')
 
 model = prepare_model(config_path, model_path, device=device)
