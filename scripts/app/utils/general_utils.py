@@ -29,3 +29,11 @@ def ensure_3_channels(original_square, inpainted_square):
     if inpainted_array.ndim == 2:  # Grayscale image
         inpainted_array = np.stack([inpainted_array]*3, axis=-1)
     return original_array, inpainted_array
+
+def apply_func_to_grid(square_length, offset, img_size, function, *args, **kwargs):
+    dx, dy = (offset % 2) * square_length // 2, (offset // 2) * square_length // 2
+    for i in range(dy, img_size, square_length):
+        for j in range(dx, img_size, square_length):
+            if i + square_length > img_size or j + square_length > img_size:
+                continue
+            function(j, i, *args, **kwargs)

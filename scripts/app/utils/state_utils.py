@@ -22,9 +22,9 @@ def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
 def init_inpainted_square(grid_key, square_key):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         st.session_state['all_inpainted_square_images'][grid_key][square_key] = {}
-    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': []}
+    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'threshold': None}
 
-def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None):
+def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None, threshold=None):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         init_inpainted_square(grid_key, square_key)
     if inpainted_square:
@@ -37,6 +37,8 @@ def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] = index
     elif len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) == 1:
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] = 0
+    if threshold:
+        st.session_state['all_inpainted_square_images'][grid_key][square_key]['threshold'] = threshold
 
 def handle_visibility_toggle_buttons():
     with st.sidebar:
@@ -44,6 +46,8 @@ def handle_visibility_toggle_buttons():
             st.session_state['show_selection'] = True
         if 'show_correct_grid' not in st.session_state:
             st.session_state['show_correct_grid'] = False
+        if 'show_thresholds' not in st.session_state:
+            st.session_state['show_thresholds'] = False
 
         with st.expander("Visibility Options"):
             col1, col2 = st.columns(2)
@@ -54,3 +58,7 @@ def handle_visibility_toggle_buttons():
             with col2:
                 if st.button('Toggle Correct Grid'):
                     st.session_state['show_correct_grid'] = not st.session_state['show_correct_grid']
+            
+            if st.button('Toggle Thresholds'):
+                st.session_state['show_thresholds'] = not st.session_state['show_thresholds']
+

@@ -49,25 +49,28 @@ def get_or_create_grid_overlay(img_size, square_size, offset):
         st.session_state['grid_overlays'][grid_key] = create_grid_overlay(img_size, square_size, offset)
     return st.session_state['grid_overlays'][grid_key]
 
-def overlay_mask(image, mask, square, offset, grid_on, correct_grid_on):
+def overlay_mask(image, mask, square, offset):
     if image.mode != 'RGBA':
         image = image.convert('RGBA')
 
     overlay = Image.new('RGBA', image.size, (255, 255, 255, 0))
 
-    if grid_on:
+    if st.session_state['show_selection']:
         # Use the stored grid overlay
         grid_overlay = get_or_create_grid_overlay(image.size[0], square[2], offset)
         overlay = Image.alpha_composite(overlay, grid_overlay)
         draw = ImageDraw.Draw(overlay)
 
         x, y, size = square
-        draw.rectangle([y, x, y + size - 1, x + size - 1], outline=(200, 69, 0, 96), width=1)  # Orange-red border
+        draw.rectangle([x, y, x + size - 1, y + size - 1], outline=(200, 69, 0, 96), width=1)  # Orange-red border
 
-    if correct_grid_on:
+    if st.session_state['show_correct_grid']:
         mask_overlay = Image.fromarray((mask * 128).astype(np.uint8), mode='L').convert('RGBA')
         mask_overlay = mask_overlay.point(lambda p: p * 0.5)
         overlay = Image.alpha_composite(overlay, mask_overlay)
+
+    if st.session_state['show_thresholds']:
+        pass
 
     combined = Image.alpha_composite(image, overlay)
     return combined

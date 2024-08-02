@@ -30,7 +30,7 @@ def preprocess_images(png_paths, mask_paths, args, img_size=512, resize_size=256
     mask_tensors = torch.stack([img_dict["concat"] for img_dict in transformed_imgs], dim=0).to(device)
     return img_tensors, mask_tensors, img_ids
 
-def inpaint_images(model, img_tensors, mask_tensors, masks, args, noise_shape, device="cpu", inpaint_parameters=None):
+def inpaint_images(model, img_tensors, mask_tensors, masks, args, noise_shape, device="cpu"):
     batch_size = 10
     inpainted_imgs = []
     for i in range(0, len(img_tensors), batch_size):
@@ -39,28 +39,18 @@ def inpaint_images(model, img_tensors, mask_tensors, masks, args, noise_shape, d
         inp_noise = torch.randn((max_index - i, *noise_shape), device=device).half() if device == 'cuda' else torch.randn((max_index - i, *noise_shape), device=device).float()
         mask_batch = masks[i:max_index].to(device).half() if device == 'cuda' else masks[i:max_index].to(device).float()
         mask_tensors_batch = mask_tensors[i:max_index].to(device).half() if device == 'cuda' else mask_tensors[i:max_index].to(device).float()
-        if not inpaint_parameters:
-            inpainted_batch = model.predict(
-                inp_noise,
-                model_kwargs={"concat": mask_tensors_batch},
-                inference_protocol=args.inference_protocol,
-                mask=mask_batch,
-                original_image=original_imgs,
-                resampling_steps=args.resample_steps,
-                jump_length=args.jump_length,
-            )
-        else:
-            start_denoise_step, resampling_steps, jump_length = inpaint_parameters
-            inpainted_batch = model.predict(
-                inp_noise,
-                model_kwargs={"concat": mask_tensors_batch},
-                inference_protocol=args.inference_protocol,
-                mask=mask_batch,
-                original_image=original_imgs,
-                resampling_steps=resampling_steps,
-                jump_length=jump_length,
-                start_denoise_step=start_denoise_step
-            )
+      
+        inpainted_batch = model.predict(
+            inp_noise,
+            model_kwargs={"concat": mask_tensors_batch},
+            inference_protocol=args.inference_protocol,
+            mask=mask_batch,
+            original_image=original_imgs,
+            resampling_steps=args.resample_steps,
+            jump_length=args.jump_length,
+            start_denoise_step=args.start_denoise_step
+        )
+     
         inpainted_imgs.extend(inpainted_batch)
     
     return inpainted_imgs

@@ -2,15 +2,13 @@
 from scipy.stats import entropy
 from app.utils.state_utils import update_inpainted_square
 from app.utils.general_utils import ensure_3_channels, is_square_inpainted, get_keys
-from app.utils.general_utils import get_inpainted_square_index
+from app.utils.general_utils import apply_func_to_grid
 from app.loader import Loader
 
 import lpips
 import torch
 import numpy as np
 import os
-import matplotlib.pyplot as plt
-from io import BytesIO
 from PIL import Image
 import streamlit as st
 
@@ -32,20 +30,20 @@ def calculate_lpips(original_array, inpainted_array, min_size=32):
     lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
     return lpips_value
 
-def calculate_square_metrics(image, image_path, square, offset):
-    inpainted_x, inpainted_y, square_length = square
+def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset):
+    square = (inpainted_x, inpainted_y, square_length)
     grid_key, square_key = get_keys(square, offset)
     index = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) - 1
 
     inpainted_square = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][index]
-    original_square = image.crop((inpainted_y, inpainted_x, inpainted_y + square_length, inpainted_x + square_length))
+    original_square = image.crop((inpainted_x, inpainted_y, inpainted_x + square_length, inpainted_y + square_length))
 
     file_name = os.path.basename(image_path)
     contour_path = "/".join(image_path.split("/")[:-2]) + "/mask_png/" + file_name
 
     # Load and and extract contour square
     contour_array = Loader.load_contour_array(contour_path)
-    contour_square = contour_array[inpainted_x:inpainted_x + square_length, inpainted_y:inpainted_y + square_length]
+    contour_square = contour_array[inpainted_y:inpainted_y + square_length, inpainted_x:inpainted_x + square_length]
 
     # Ensure both images have 3 channels
     original_array, inpainted_array = ensure_3_channels(original_square, inpainted_square)
@@ -81,12 +79,8 @@ def calculate_square_metrics(image, image_path, square, offset):
     update_inpainted_square(grid_key, square_key, metrics=metrics)
 
 def calculate_grid_metrics(image, image_path, square, offset):
-    dx, dy = (offset % 2) * square[2] // 2, (offset // 2) * square[2] // 2
-    for i in range(dy, image.size[0], square[2]):
-        for j in range(dx, image.size[1], square[2]):
-            if i + square[2] > image.size[0] or j + square[2] > image.size[1]:
-                continue
-            calculate_square_metrics(image, image_path, (j, i, square[2]), offset)
+    print(square[2], offset)
+    apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset)
 
 def navigate_metrics(grid_key, square_key, direction):
     metrics_amount = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'])

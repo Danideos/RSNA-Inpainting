@@ -28,6 +28,7 @@ def show_image(image, square, mask, offset, middle_col, right_col):
     grid_key, square_key = get_keys(square, offset)
     x, y, square_length = square
     is_inpainted = is_square_inpainted(grid_key, square_key)
+    print("searched:", grid_key, square_key, "found", is_inpainted)
     index = None if not is_inpainted else st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
 
     with middle_col:
@@ -38,9 +39,9 @@ def show_image(image, square, mask, offset, middle_col, right_col):
         add_info = f'\nInpainting toggled off'
         if is_inpainted and st.session_state['show_inpainted_square']:
             inpainted_square_image = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][index]
-            image_copy.paste(inpainted_square_image, (y, x))
+            image_copy.paste(inpainted_square_image, (x, y))
             add_info = '\nInpainting toggled on'
-        overlay_image = overlay_mask(image_copy, mask, square, offset, st.session_state['show_selection'], st.session_state['show_correct_grid'])
+        overlay_image = overlay_mask(image_copy, mask, square, offset)
         st.image(overlay_image, caption=f'Square at X: {x // square_length}, Y: {y // square_length}, Index: {index},{add_info}', use_column_width=True)
         # st.markdown('</div>', unsafe_allow_html=True)
 

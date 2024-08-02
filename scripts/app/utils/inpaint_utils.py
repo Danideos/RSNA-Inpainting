@@ -4,11 +4,14 @@ from app.utils.general_utils import get_keys
 from app.loader import Loader
 
 import streamlit as st
+from thresholding import ThresholdingPipeline
 
 
 def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inpaint_parameters, offset):
     with st.sidebar:
         with st.expander("Inpainting Options"):
+            grid_key, square_key = get_keys(square, offset)
+
             if st.button('Inpaint Square'):
                 inpaint_square(image_path, square, mask, img_size, offset, inpaint_parameters=inpaint_parameters)
                 calculate_square_metrics(image, image_path, square, offset)
@@ -17,7 +20,7 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
             if st.button('Inpaint Grid'):
                 inpaint_grid(image_path, img_size, square, offset, inpaint_parameters=inpaint_parameters)
                 calculate_grid_metrics(image, image_path, square, offset)
-                grid_key, _ = get_keys(square, offset)
+                ThresholdingPipeline.calculate_grid_thresholds(img_size, square, offset)
                 st.rerun()
         
             if st.button('Toggle Inpainted Square'):
