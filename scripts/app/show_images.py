@@ -28,7 +28,6 @@ def show_image(image, square, mask, offset, middle_col, right_col):
     grid_key, square_key = get_keys(square, offset)
     x, y, square_length = square
     is_inpainted = is_square_inpainted(grid_key, square_key)
-    print("searched:", grid_key, square_key, "found", is_inpainted)
     index = None if not is_inpainted else st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
 
     with middle_col:

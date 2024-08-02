@@ -51,8 +51,8 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
 
     # Apply histogram calculation only to the white pixels in the contour mask
     mask = (contour_square == 255)
-    original_scaled = (original_array.astype(np.float32) / 255.0) * 80
-    inpainted_scaled = (inpainted_array.astype(np.float32) / 255.0) * 80
+    original_scaled = (np.asarray(original_square).astype(np.float32) / 255.0) * 80
+    inpainted_scaled = (np.asarray(inpainted_square).astype(np.float32) / 255.0) * 80
     original_histogram_values = original_scaled[mask].flatten()
     inpainted_histogram_values = inpainted_scaled[mask].flatten()
 
@@ -79,7 +79,6 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     update_inpainted_square(grid_key, square_key, metrics=metrics)
 
 def calculate_grid_metrics(image, image_path, square, offset):
-    print(square[2], offset)
     apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset)
 
 def navigate_metrics(grid_key, square_key, direction):

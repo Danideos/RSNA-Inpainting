@@ -53,7 +53,6 @@ def inpaint_grid(image_path, img_size, square, offset, inpaint_parameters):
     grid_key, _ = get_keys(square, offset)
     for inpainted_square, inpainted_x, inpainted_y, square_length, offset in all_inpainted_squares:
         square_key = (inpainted_x, inpainted_y)
-        print(f"storing {grid_key}, {square_key}")
         update_inpainted_square(grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
 
@@ -71,7 +70,7 @@ def get_inpainted_square(square, image_path, contour_path, grid_mask, img_size=2
 
     # Convert the inpainted image tensor to a numpy array
     inpainted_square = inpainted_imgs[0].cpu().numpy().transpose(2, 1, 0).squeeze(2)
-    inpainted_square = ((inpainted_square + 1) / 2 * 255).astype(np.uint8)
+    inpainted_square = ((inpainted_square + 1) * 122.5).astype(np.uint8)
     inpainted_square = inpainted_square[y:y + square_length, x:x + square_length]
     
     return inpainted_square

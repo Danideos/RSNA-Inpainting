@@ -1,3 +1,5 @@
+from app.utils.general_utils import apply_func_to_grid, get_keys
+
 import numpy as np
 from PIL import Image, ImageDraw
 import streamlit as st
@@ -70,7 +72,15 @@ def overlay_mask(image, mask, square, offset):
         overlay = Image.alpha_composite(overlay, mask_overlay)
 
     if st.session_state['show_thresholds']:
-        pass
+        apply_func_to_grid(square[2], offset, image.size[0], overlay_thresholds, square[2], offset, overlay)
 
     combined = Image.alpha_composite(image, overlay)
     return combined
+
+def overlay_thresholds(x, y, square_length, offset, overlay):
+    square = (x, y, square_length)
+    grid_key, square_key = get_keys(square, offset)
+    is_thresholded = st.session_state['all_inpainted_square_images'][grid_key][square_key]['threshold']
+    if is_thresholded:
+        draw = ImageDraw.Draw(overlay)
+        draw.rectangle([x + 1, y + 1, x + square_length - 2, y + square_length - 2], fill=(255, 0, 0, 64), width=1)  # Red border

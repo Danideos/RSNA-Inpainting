@@ -22,7 +22,7 @@ def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
 def init_inpainted_square(grid_key, square_key):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         st.session_state['all_inpainted_square_images'][grid_key][square_key] = {}
-    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'threshold': None}
+    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'threshold': False}
 
 def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None, threshold=None):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:

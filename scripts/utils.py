@@ -101,8 +101,8 @@ def lambda_transform_with_grid(data, grid):
     
     combined = torch.cat([concat, masked_img], dim=0)
     
-    data['concat'] = combined / 122.5 - 1
-    data['img'] = img / 122.5 - 1
+    data['concat'] = combined / 127.5 - 1
+    data['img'] = img / 127.5 - 1
 
     return data
 
