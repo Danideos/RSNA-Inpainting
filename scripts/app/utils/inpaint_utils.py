@@ -19,16 +19,16 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
         
             if st.button('Inpaint Grid'):
                 inpaint_grid(image_path, img_size, square, offset, inpaint_parameters=inpaint_parameters)
-                calculate_grid_metrics(image, image_path, square, offset)
-                ThresholdingPipeline.calculate_grid_thresholds(img_size, square, offset)
+                calculate_grid_metrics(image, image_path, square, offset) 
+                ThresholdingPipeline.calculate_grid_thresholds(img_size, square[2], offset)
                 st.rerun()
         
             if st.button('Toggle Inpainted Square'):
                 st.session_state['show_inpainted_square'] = not st.session_state['show_inpainted_square']
 
-            save_path = st.text_input('Enter the path to save configuration:')
-            if st.button('Save Configuration'):
+            save_path = st.text_input('Enter the path to save session state:')
+            if st.button('Save Session State'):
                 if save_path:
-                    Loader.save_config(grid_key, save_path)
+                    Loader.save_session_state(grid_key, save_path)
                 else:
                     st.error('Please enter a valid save path.')

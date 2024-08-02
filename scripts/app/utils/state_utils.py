@@ -22,7 +22,7 @@ def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
 def init_inpainted_square(grid_key, square_key):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
         st.session_state['all_inpainted_square_images'][grid_key][square_key] = {}
-    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'threshold': False}
+    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'thresholds': []}
 
 def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None, threshold=None):
     if square_key not in st.session_state['all_inpainted_square_images'][grid_key]:
@@ -38,7 +38,10 @@ def update_inpainted_square(grid_key, square_key, inpainted_square=None, metrics
     elif len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) == 1:
         st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] = 0
     if threshold:
-        st.session_state['all_inpainted_square_images'][grid_key][square_key]['threshold'] = threshold
+        if index is None:
+            st.session_state['all_inpainted_square_images'][grid_key][square_key]['thresholds'].append(threshold)
+        else:
+            st.session_state['all_inpainted_square_images'][grid_key][square_key]['thresholds'][index] = threshold
 
 def handle_visibility_toggle_buttons():
     with st.sidebar:

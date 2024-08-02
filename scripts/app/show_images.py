@@ -54,12 +54,16 @@ def show_image(image, square, mask, offset, middle_col, right_col):
                     expanded = True if i == index else False
                     with st.expander(f"Metrics for inpainted index {i}", expanded=expanded):
                         metrics = st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'][i]
+                        threshold = st.session_state['all_inpainted_square_images'][grid_key][square_key]['thresholds'][i]
                         # Generate the histogram plot if it doesn't exist
                         if metrics['histogram_image'] is None:
                             metrics['histogram_image'] = generate_histogram_plot(metrics['original_histogram_data'], metrics['inpainted_histogram_data'])
-                        
+                        # Metric stats
                         st.image(metrics['histogram_image'], caption="Histogram Comparison")
                         st.write(f"LPIPS: {metrics['lpips']}")
                         st.write(f"Mean Difference: {metrics['mean_diff']}")
                         st.write(f"KL Divergence: {metrics['kl_div']}")
+                        # Threshold stats
+                        st.write(f"Threshold Difference Percent: {threshold['difference_percent']}")
+
                  

@@ -1,5 +1,7 @@
 # utils/slider_utils.py
 import streamlit as st
+from app.thresholding import ThresholdingPipeline
+from app.utils.general_utils import get_current_index
 
 
 def get_square_and_mask(square_length, x_index, y_index, offset_option):
@@ -31,4 +33,23 @@ def get_slider_parameters(square_lengths, img_size, middle):
             resampling_steps = st.slider('Select Resampling Steps:', 1, 10, 1)
             jump_length = st.slider('Select Jump Length:', 1, 10, 1)
             inpaint_parameters = (start_denoise_step, resampling_steps, jump_length)
+
+        with st.expander("Thresholding Parameters"):
+            threshold_percent = st.number_input('Select Original Boundary Percent', 0.0, 100.0, 97., step=0.1)
+            difference_percent = st.number_input('Select Difference Percent', 0.0, 100.0, 10.0, step=0.1)
+            valid_square_percent = st.number_input('Select Valid Square Percent', 0.0, 100.0, 25.0, step=0.1)
+            pre_boundary_count = st.slider('Select Pre-Boundary Count', 0, 80, 5, step=1)
+            ThresholdingPipeline.change_threshold_params(
+                threshold_percent=threshold_percent,
+                difference_percent=difference_percent,
+                valid_square_percent=valid_square_percent,
+                pre_boundary_count=pre_boundary_count,
+            )
+            
+            if st.button('Recalculate Thresholds'):
+                square = (x_index * square_length, y_index * square_length, square_length)
+                index = get_current_index(square, offset_option)
+                print("current index for threshold change", index)
+                ThresholdingPipeline.calculate_grid_thresholds(img_size, square_length, offset_option, index)
+            
     return square_length, offset_option, x_index, y_index, inpaint_parameters

@@ -40,47 +40,22 @@ class Loader:
         return contour_array
     
     @staticmethod
-    def save_config(grid_key, save_name):
-        config_data = {}
-        for grid_key, squares in st.session_state['all_inpainted_square_images'].items():
-            config_data[grid_key] = {}
-            for square_key, data in squares.items():
-                if data['inpainted_square_image']:
-                    config_data[grid_key][square_key] = {
-                        'inpainted_square_image': data['inpainted_square_image'][-1],
-                        'metrics': data['metrics'][-1],
-                        'inpainting_parameters': data['parameters'][-1]
-                    }
+    def save_session_state(save_name):
         config_save_dir = os.getenv("INPAINTING_CONFIG_SAVE_DIR")
         config_file_name = save_name
         config_save_path = os.path.join(config_save_dir, config_file_name)
         with open(config_save_path, 'wb') as f:
-            pickle.dump(config_data, f)
-        st.success('Configuration saved successfully.')
+            pickle.dump(st.session_state, f)
+        st.success('Session state saved successfully.')
 
     @staticmethod
-    def load_config():
+    def load_session_state():
         config_path = os.getenv("INPAINTING_CONFIG_LOAD_PATH")
         if os.path.exists(config_path):
             with open(config_path, 'rb') as f:
-                config_data = pickle.load(f)
-            for grid_key, squares in config_data.items():
-                if grid_key not in st.session_state['all_inpainted_square_images']:
-                    st.session_state['all_inpainted_square_images'][grid_key] = {}
-                for square_key, data in squares.items():
-                    st.session_state['all_inpainted_square_images'][grid_key][square_key] = {
-                        'inpainted_square_image': [],
-                        'metrics': [],
-                        'index': None,
-                        'parameters': []
-                    }
-                    update_inpainted_square(
-                        grid_key,
-                        square_key,
-                        inpainted_square=data['inpainted_square_image'],
-                        metrics=data['metrics'],
-                        inpaint_parameters=data['inpainting_parameters']
-                    )
-            st.success('Configuration loaded successfully.')
+                session_state_data = pickle.load(f)
+            for key, value in session_state_data.items():
+                st.session_state[key] = value
+            st.success('Session state loaded successfully.')
         else:
             st.error('No configuration file found.')

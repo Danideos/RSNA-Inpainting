@@ -1,5 +1,6 @@
 import sys
 import os
+import importlib
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.insert(0, project_root)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
@@ -18,7 +19,7 @@ from app.utils.slider_utils import get_slider_parameters, get_square_and_mask
 from app.utils.state_utils import initialize_states, handle_visibility_toggle_buttons
 from app.utils.metric_utils import handle_metric_toggle_buttons
 from app.utils.inpaint_utils import handle_inpaint_toggle_buttons
-
+from app.thresholding import ThresholdingPipeline
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -39,6 +40,10 @@ def display_image_selector():
     loader = Loader(image_size=img_size) 
     with middle:
         st.title('Inpainting Thresholding Tool')
+        if st.button("Reload Module"):
+            # importlib.reload(app.thresholding)
+            # importlib.reload("app.utils.slider_utils")
+            st.success("Module reloaded successfully")
         image, image_path = loader.load_image_from_input()
 
     # Handle input from slider params

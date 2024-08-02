@@ -14,6 +14,13 @@ def get_keys(square, offset):
     square_key = (x, y)
     return (grid_key, square_key)
 
+def get_current_index(square, offset):
+    grid_key, square_key = get_keys(square, offset)
+    if square_key in st.session_state['all_inpainted_square_images'][grid_key]:
+        index = st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
+        return index
+    return None
+
 def get_inpainted_square_index(grid_key, square_key):
     return st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
 
