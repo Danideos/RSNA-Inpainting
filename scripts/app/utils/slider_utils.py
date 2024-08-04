@@ -2,6 +2,7 @@
 import streamlit as st
 from app.thresholding import ThresholdingPipeline
 from app.utils.general_utils import get_current_index
+from app.utils.metric_utils import calculate_grid_metrics
 
 
 def get_square_and_mask(square_length, x_index, y_index, offset_option):
@@ -16,7 +17,7 @@ def get_square_and_mask(square_length, x_index, y_index, offset_option):
 
     return square, mask
 
-def get_slider_parameters(square_lengths, img_size, middle):
+def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
     with st.sidebar:
         with st.expander("Slider Parameters"):
             square_length = st.selectbox('Select Square Size:', square_lengths)
@@ -24,9 +25,8 @@ def get_slider_parameters(square_lengths, img_size, middle):
 
             grid_dim = (img_size // square_length)
 
-            x_index = st.slider('Select X Index:', 0, grid_dim - 1, 0)
-            y_index = st.slider('Select Y Index:', 0, grid_dim - 1, 0)
-
+            x_index = st.slider('Select X Index:', 0, grid_dim - 1, st.session_state.x_index)
+            y_index = st.slider('Select Y Index:', 0, grid_dim - 1, st.session_state.y_index)
 
         with st.expander("Inpainting Parameters"):
             start_denoise_step = st.slider('Select Start Denoise Step:', 1, 100, 100)
@@ -35,21 +35,37 @@ def get_slider_parameters(square_lengths, img_size, middle):
             inpaint_parameters = (start_denoise_step, resampling_steps, jump_length)
 
         with st.expander("Thresholding Parameters"):
-            threshold_percent = st.number_input('Select Original Boundary Percent', 0.0, 100.0, 97., step=0.1)
-            difference_percent = st.number_input('Select Difference Percent', 0.0, 100.0, 10.0, step=0.1)
-            valid_square_percent = st.number_input('Select Valid Square Percent', 0.0, 100.0, 25.0, step=0.1)
+            threshold_percent = st.number_input('Select Original Boundary Percent', 0.0, 100.0, 97.5, step=0.1)
+            difference_percent = st.number_input('Select Difference Percent', -100.0, 100.0, 20.0, step=0.1)
+            valid_square_percent = st.number_input('Select Valid Square Percent', 0.0, 100.0, 75.0, step=0.1)
+            std_dev_diff_amount = st.number_input('Select Standard Deviation Diff Amount', -20.0, 20.0, 3.0, step=0.1)
+            emd = st.number_input('Select EMD', 0.0, 1000.0, 40.0, step=1.0)
+            mse = st.number_input('Select MSE', -1000.0, 1000.0, 0.0, step=1.0)
+            pixel_dist = st.number_input('Select Pixel Distance', 0, 80, 10, step=1)
+            pixel_exceed_count = st.number_input('Select Pixel Exceed Count', 0, 250, 32, step=1)
             pre_boundary_count = st.slider('Select Pre-Boundary Count', 0, 80, 5, step=1)
             ThresholdingPipeline.change_threshold_params(
                 threshold_percent=threshold_percent,
                 difference_percent=difference_percent,
                 valid_square_percent=valid_square_percent,
                 pre_boundary_count=pre_boundary_count,
+                std_dev_diff_amount=std_dev_diff_amount,
+                emd=emd,
+                mse=mse,
+                pixel_dist=pixel_dist,
+                pixel_exceed_count=pixel_exceed_count
             )
             
             if st.button('Recalculate Thresholds'):
-                square = (x_index * square_length, y_index * square_length, square_length)
+                dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
+                square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
                 index = get_current_index(square, offset_option)
-                print("current index for threshold change", index)
+                ThresholdingPipeline.calculate_grid_thresholds(img_size, square_length, offset_option, index)
+            if st.button('Recalculate Metrics'):
+                dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
+                square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
+                index = get_current_index(square, offset_option)
+                calculate_grid_metrics(image, image_path, square, offset_option, index)
                 ThresholdingPipeline.calculate_grid_thresholds(img_size, square_length, offset_option, index)
             
     return square_length, offset_option, x_index, y_index, inpaint_parameters

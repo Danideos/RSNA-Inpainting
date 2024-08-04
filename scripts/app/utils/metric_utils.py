@@ -3,13 +3,14 @@ from scipy.stats import entropy
 from app.utils.state_utils import update_inpainted_square
 from app.utils.general_utils import ensure_3_channels, is_square_inpainted, get_keys
 from app.utils.general_utils import apply_func_to_grid
-from app.loader import Loader
+from scripts.app.data_manager import DataManager
 
 import lpips
 import torch
 import numpy as np
 import os
 from PIL import Image
+from pyemd import emd
 import streamlit as st
 
 lpips_model = lpips.LPIPS(net='alex')
@@ -30,19 +31,19 @@ def calculate_lpips(original_array, inpainted_array, min_size=32):
     lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
     return lpips_value
 
-def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset):
+def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset, index=None):
     square = (inpainted_x, inpainted_y, square_length)
     grid_key, square_key = get_keys(square, offset)
-    index = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) - 1
+    metric_index = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) - 1
 
-    inpainted_square = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][index]
+    inpainted_square = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][metric_index]
     original_square = image.crop((inpainted_x, inpainted_y, inpainted_x + square_length, inpainted_y + square_length))
 
     file_name = os.path.basename(image_path)
     contour_path = "/".join(image_path.split("/")[:-2]) + "/mask_png/" + file_name
 
-    # Load and and extract contour square
-    contour_array = Loader.load_contour_array(contour_path)
+    # Load and extract contour square
+    contour_array = DataManager.load_contour_array(contour_path)
     contour_square = contour_array[inpainted_y:inpainted_y + square_length, inpainted_x:inpainted_x + square_length]
 
     # Ensure both images have 3 channels
@@ -56,15 +57,28 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     original_histogram_values = original_scaled[mask].flatten()
     inpainted_histogram_values = inpainted_scaled[mask].flatten()
 
+    if original_histogram_values.size == 0 or inpainted_histogram_values.size == 0:
+        update_inpainted_square(grid_key, square_key, metrics=False)
+        return
+
     original_hist, _ = np.histogram(original_histogram_values, bins=80, range=(0, 80), density=True)
     inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=True)
-    # buf = create_histogram_plot(original_histogram_values, inpainted_histogram_values)
-
-    # Calculate difference in means
-    mean_diff = np.abs(np.mean(original_histogram_values) - np.mean(inpainted_histogram_values))
     
-    # Calculate KL divergence
-    kl_div = entropy(original_hist + 1e-10, inpainted_hist + 1e-10)  # Add small value to avoid division by zero
+    # Calculate difference in means
+    mean_inpainted_hist = np.mean(inpainted_histogram_values)
+    mean_original_hist = np.mean(original_histogram_values)
+    mean_diff = mean_original_hist - mean_inpainted_hist
+    
+    # Calculate EMD
+    n = 80
+    cost_matrix = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            cost_matrix[i, j] = abs(i - j) ** 2#* max(np.abs(mean_inpainted_hist - i), np.abs(mean_inpainted_hist - j))
+    emd_value = emd(original_hist, inpainted_hist, cost_matrix)
+
+    # Calculate additional metrics as differences
+    std_dev_diff = np.std(original_histogram_values) - np.std(inpainted_histogram_values)
 
     # Store metrics with square key
     metrics = {
@@ -73,13 +87,15 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
         "inpainted_histogram_data": inpainted_histogram_values,
         "histogram_image": None,
         "mean_diff": mean_diff,
-        "kl_div": kl_div,
+        "emd": emd_value,
+        "std_dev_diff": std_dev_diff,
+        "mse": np.mean((original_histogram_values - inpainted_histogram_values) ** 2)
     }
 
-    update_inpainted_square(grid_key, square_key, metrics=metrics)
+    update_inpainted_square(grid_key, square_key, metrics=metrics, index=index)
 
-def calculate_grid_metrics(image, image_path, square, offset):
-    apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset)
+def calculate_grid_metrics(image, image_path, square, offset, index=None):
+    apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset, index)
 
 def navigate_metrics(grid_key, square_key, direction):
     metrics_amount = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'])

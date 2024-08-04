@@ -1,7 +1,7 @@
 from inpaint import inpaint_square, inpaint_grid
 from app.utils.metric_utils import calculate_square_metrics, calculate_grid_metrics
 from app.utils.general_utils import get_keys
-from app.loader import Loader
+from scripts.app.data_manager import DataManager
 
 import streamlit as st
 from thresholding import ThresholdingPipeline
@@ -26,9 +26,3 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
             if st.button('Toggle Inpainted Square'):
                 st.session_state['show_inpainted_square'] = not st.session_state['show_inpainted_square']
 
-            save_path = st.text_input('Enter the path to save session state:')
-            if st.button('Save Session State'):
-                if save_path:
-                    Loader.save_session_state(grid_key, save_path)
-                else:
-                    st.error('Please enter a valid save path.')

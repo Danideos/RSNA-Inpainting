@@ -1,10 +1,12 @@
 from app.utils.general_utils import is_square_inpainted
 from app.mask import overlay_mask
-from app.utils.general_utils import get_keys
+from app.utils.general_utils import get_keys, set_x_and_y
 import matplotlib.pyplot as plt
 from io import BytesIO
+import numpy as np
 
 import streamlit as st
+from streamlit_image_coordinates import streamlit_image_coordinates
 
 
 def generate_histogram_plot(original_histogram_values, inpainted_histogram_values):
@@ -31,18 +33,17 @@ def show_image(image, square, mask, offset, middle_col, right_col):
     index = None if not is_inpainted else st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
 
     with middle_col:
-        # with st.container():
-        # st.markdown('<div class="left-align">', unsafe_allow_html=True)
-        # Display the original image with the inpainted square if toggled on
         image_copy = image.copy()
         add_info = f'\nInpainting toggled off'
         if is_inpainted and st.session_state['show_inpainted_square']:
             inpainted_square_image = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][index]
             image_copy.paste(inpainted_square_image, (x, y))
             add_info = '\nInpainting toggled on'
+
         overlay_image = overlay_mask(image_copy, mask, square, offset)
-        st.image(overlay_image, caption=f'Square at X: {x // square_length}, Y: {y // square_length}, Index: {index},{add_info}', use_column_width=True)
-        # st.markdown('</div>', unsafe_allow_html=True)
+        # st.image(overlay_image, caption=f'Square at X: {x // square_length}, Y: {y // square_length}, Index: {index},{add_info}', use_column_width=True)
+        st.write(f'Square at X: {x // square_length}, Y: {y // square_length}, Index: {index},{add_info}')
+        value = streamlit_image_coordinates(overlay_image, use_column_width=True)
 
 
     with right_col:
@@ -54,6 +55,8 @@ def show_image(image, square, mask, offset, middle_col, right_col):
                     expanded = True if i == index else False
                     with st.expander(f"Metrics for inpainted index {i}", expanded=expanded):
                         metrics = st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'][i]
+                        if not metrics: 
+                            continue
                         threshold = st.session_state['all_inpainted_square_images'][grid_key][square_key]['thresholds'][i]
                         # Generate the histogram plot if it doesn't exist
                         if metrics['histogram_image'] is None:
@@ -62,8 +65,15 @@ def show_image(image, square, mask, offset, middle_col, right_col):
                         st.image(metrics['histogram_image'], caption="Histogram Comparison")
                         st.write(f"LPIPS: {metrics['lpips']}")
                         st.write(f"Mean Difference: {metrics['mean_diff']}")
-                        st.write(f"KL Divergence: {metrics['kl_div']}")
+                        st.write(f"EMD: {metrics['emd']}")
+                        st.write(f"Standard Deviation: {metrics['std_dev_diff']}")
+                        st.write(f"MSE: {metrics['mse']}")
                         # Threshold stats
                         st.write(f"Threshold Difference Percent: {threshold['difference_percent']}")
+    
+    if value:
+        set_x_and_y(value, image.size[0], square_length)
+        value = None
+        # st.rerun()
 
                  
