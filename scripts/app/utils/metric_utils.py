@@ -52,17 +52,14 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
 
     # Apply histogram calculation only to the white pixels in the contour mask
     mask = (contour_square == 255)
-    original_scaled = (np.asarray(original_square).astype(np.float32) / 255.0) * 80
-    inpainted_scaled = (np.asarray(inpainted_square).astype(np.float32) / 255.0) * 80
+    original_scaled = (np.asarray(original_square).astype(np.float64) / 255.0) * 80
+    inpainted_scaled = (np.asarray(inpainted_square).astype(np.float64) / 255.0) * 80
     original_histogram_values = original_scaled[mask].flatten()
     inpainted_histogram_values = inpainted_scaled[mask].flatten()
 
     if original_histogram_values.size == 0 or inpainted_histogram_values.size == 0:
         update_inpainted_square(grid_key, square_key, metrics=False)
         return
-
-    original_hist, _ = np.histogram(original_histogram_values, bins=80, range=(0, 80), density=True)
-    inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=True)
     
     # Calculate difference in means
     mean_inpainted_hist = np.mean(inpainted_histogram_values)
@@ -70,12 +67,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     mean_diff = mean_original_hist - mean_inpainted_hist
     
     # Calculate EMD
-    n = 80
-    cost_matrix = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            cost_matrix[i, j] = abs(i - j) ** 2#* max(np.abs(mean_inpainted_hist - i), np.abs(mean_inpainted_hist - j))
-    emd_value = emd(original_hist, inpainted_hist, cost_matrix)
+    emd_value = emd(original_histogram_values, inpainted_histogram_values, emd_distance_matrices[square_length], extra_mass_penalty=emd_alpha[square_length])
 
     # Calculate additional metrics as differences
     std_dev_diff = np.std(original_histogram_values) - np.std(inpainted_histogram_values)
@@ -114,3 +106,25 @@ def handle_metric_toggle_buttons(square, offset):
             with col2:
                 if st.button('Next'):
                     navigate_metrics(grid_key, square_key, 1)
+
+@st.cache_data
+def compute_emd_2d_distance_matrix(size):
+    distance_matrix = np.zeros((size * size, size * size))
+    for i in range(size):
+        for j in range(size):
+            for k in range(size):
+                for l in range(size):
+                    distance_matrix[i * size + j, k * size + l] = np.sqrt((i - k)**2 + (j - l)**2)
+    return distance_matrix
+
+emd_distance_matrices = {
+    32: compute_emd_2d_distance_matrix(32),
+    16: compute_emd_2d_distance_matrix(16),
+    8: compute_emd_2d_distance_matrix(8),
+}
+
+emd_alpha = {
+    32: np.sqrt(128),
+    16: np.sqrt(32),
+    8: np.sqrt(8),
+}

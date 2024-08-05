@@ -2,11 +2,11 @@
 import streamlit as st
 from app.mask import create_masks
 
-@st.cache_data
 def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
-    print("Initializing states")
     if 'masks' not in st.session_state:
         st.session_state['masks'] = create_masks(img_size, square_lengths)
+    if 'grid_overlays' not in st.session_state:
+        st.session_state['grid_overlays'] = {}
     if 'show_inpainted_square' not in st.session_state:
         st.session_state['show_inpainted_square'] = False
     if 'metrics_index' not in st.session_state:

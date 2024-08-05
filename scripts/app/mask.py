@@ -29,6 +29,7 @@ def create_masks(img_size, square_sizes):
 
     return masks
 
+@st.cache_data
 def create_grid_overlay(img_size, square_size, offset):
     overlay = Image.new('RGBA', (img_size, img_size), (255, 255, 255, 0))
     draw = ImageDraw.Draw(overlay)
@@ -43,10 +44,9 @@ def create_grid_overlay(img_size, square_size, offset):
 
     return overlay
 
+@st.cache_data
 def get_or_create_grid_overlay(img_size, square_size, offset):
     grid_key = (square_size, offset)
-    if 'grid_overlays' not in st.session_state:
-        st.session_state['grid_overlays'] = {}
     if grid_key not in st.session_state['grid_overlays']:
         st.session_state['grid_overlays'][grid_key] = create_grid_overlay(img_size, square_size, offset)
     return st.session_state['grid_overlays'][grid_key]

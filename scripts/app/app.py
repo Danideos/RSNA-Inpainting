@@ -24,7 +24,7 @@ import app.utils.general_utils
 import app.thresholding 
 import app.utils.slider_utils   
 import app.show_images
-import scripts.app.data_manager
+import app.data_manager
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -33,7 +33,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 def reload_modules():
     if st.button("Reload Module"):
         importlib.reload(app.thresholding)
-        importlib.reload(app.Datamanager)
+        importlib.reload(app.data_manager)
         importlib.reload(app.utils.slider_utils)
         importlib.reload(app.utils.state_utils)
         importlib.reload(app.utils.general_utils)
@@ -48,15 +48,15 @@ def display_image_selector():
     left, middle, right = st.columns([1, 2, 2])
 
     img_size = 256
-    square_lengths = [48, 32, 16, 8]
+    square_lengths = [32, 16, 8]
 
-    data_manager = DataManager(image_size=img_size) 
+    data_manager = DataManager() 
     with middle:
         st.title('Inpainting Thresholding Tool')
         reload_modules()
     
     image_path = data_manager.ask_for_image_path()
-    image = data_manager.load_image(image_path)
+    image = data_manager.load_image(image_path, img_size)
     # series_path = ''
     # series = DataManager.load_series(series_path)
 

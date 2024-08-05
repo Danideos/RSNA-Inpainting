@@ -20,7 +20,7 @@ def handle_inpaint_toggle_buttons(image_path, image, square, mask, img_size, inp
             if st.button('Inpaint Grid'):
                 inpaint_grid(image_path, img_size, square, offset, inpaint_parameters=inpaint_parameters)
                 calculate_grid_metrics(image, image_path, square, offset) 
-                ThresholdingPipeline.calculate_grid_thresholds(img_size, square[2], offset)
+                ThresholdingPipeline.calculate_grid_thresholds(image, square[2], offset)
                 st.rerun()
         
             if st.button('Toggle Inpainted Square'):

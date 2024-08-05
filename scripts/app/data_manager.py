@@ -11,31 +11,31 @@ load_dotenv()
 
 
 class DataManager:
-    def __init__(self, image_size):
-        self.image_size = image_size
+    def __init__(self):
         self.default_image = os.getenv('UNHEALTHY_PATH')
-
 
     def ask_for_image_path(self):
         image_path = st.text_input('Enter the path to your image:', self.default_image)
         return image_path
 
+    @staticmethod
     @st.cache_data
-    def load_image(self, path):
+    def load_image(path, image_size=256):
         try:
             image = Image.open(path)
-            image = image.resize((self.image_size, self.image_size), Image.Resampling.LANCZOS)
+            image = image.resize((image_size, image_size), Image.Resampling.LANCZOS)
             return image
         except Exception as e:
             print(f"Error loading image: {e}")
             return None
     
-    def load_series(self, series_path):
+    @staticmethod
+    def load_series(self, series_path, image_size=256):
         series = []
         for file in os.listdir(series_path):
             if file.endswith(".png"):
                 image = Image.open(os.path.join(series_path, file))
-                image = image.resize((self.image_size, self.image_size), Image.Resampling.LANCZOS)
+                image = image.resize((image_size, image_size), Image.Resampling.LANCZOS)
                 series.append(image)
         return series
 
