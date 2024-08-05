@@ -15,6 +15,13 @@ import streamlit as st
 
 lpips_model = lpips.LPIPS(net='alex')
 
+emd_cost_matrix = np.zeros((80, 80))
+for i in range(80):
+    for j in range(80):
+        emd_cost_matrix[i, j] = abs(i - j) 
+        # if j <= 20:
+        #     emd_cost_matrix[i, j] /= 5
+
 
 def calculate_lpips(original_array, inpainted_array, min_size=32):
     min_size = 32
@@ -56,6 +63,8 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     inpainted_scaled = (np.asarray(inpainted_square).astype(np.float64) / 255.0) * 80
     original_histogram_values = original_scaled[mask].flatten()
     inpainted_histogram_values = inpainted_scaled[mask].flatten()
+    original_hist = np.histogram(original_histogram_values, bins=80, range=(0, 80), density=False)[0].astype(np.float64)
+    inpainted_hist = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=False)[0].astype(np.float64)
 
     if original_histogram_values.size == 0 or inpainted_histogram_values.size == 0:
         update_inpainted_square(grid_key, square_key, metrics=False)
@@ -67,7 +76,8 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     mean_diff = mean_original_hist - mean_inpainted_hist
     
     # Calculate EMD
-    emd_value = emd(original_histogram_values, inpainted_histogram_values, emd_distance_matrices[square_length], extra_mass_penalty=emd_alpha[square_length])
+    # emd_value = emd(original_histogram_values, inpainted_histogram_values, emd_distance_matrices[square_length], extra_mass_penalty=emd_alpha[square_length])
+    emd_value = emd(original_hist, inpainted_hist, emd_cost_matrix) / np.sum(original_hist)
 
     # Calculate additional metrics as differences
     std_dev_diff = np.std(original_histogram_values) - np.std(inpainted_histogram_values)
@@ -114,7 +124,7 @@ def compute_emd_2d_distance_matrix(size):
         for j in range(size):
             for k in range(size):
                 for l in range(size):
-                    distance_matrix[i * size + j, k * size + l] = np.sqrt((i - k)**2 + (j - l)**2)
+                    distance_matrix[i * size + j, k * size + l] = (i - k)**2 + (j - l)**2
     return distance_matrix
 
 emd_distance_matrices = {
@@ -124,7 +134,7 @@ emd_distance_matrices = {
 }
 
 emd_alpha = {
-    32: np.sqrt(128),
-    16: np.sqrt(32),
-    8: np.sqrt(8),
+    32: 128,
+    16: 32,
+    8: 8,
 }

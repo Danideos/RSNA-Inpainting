@@ -106,17 +106,16 @@ def lambda_transform_with_grid(data, grid):
 
     return data
 
-def lambda_transform(data):
+def lambda_transform(data, noise_level=50):
     img = data['img']
     concat = data['concat']
     
     square_length = random.choice([8, 16, 32, 48])
     mask = generate_single_mask(img.shape[-2:], square_length)
-    
     mask = apply_random_shift(mask, square_length)
     
-    mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)  # Add channel dimension
-    img_tensor = img.clone().detach() # torch.tensor(img, dtype=torch.float)
+    mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
+    img_tensor = img.clone().detach()
     
     masked_img = img_tensor * (1 - mask_tensor)
     

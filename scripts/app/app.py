@@ -38,6 +38,7 @@ def reload_modules():
         importlib.reload(app.utils.state_utils)
         importlib.reload(app.utils.general_utils)
         importlib.reload(app.utils.inpaint_utils)
+        importlib.reload(app.utils.metric_utils)
         importlib.reload(app.show_images)
         importlib.reload(app.mask)
         st.success("Module reloaded successfully")
