@@ -61,7 +61,7 @@ def analyze_csv(csv_file, series_to_slices):
 
 def generate_single_mask(img_shape, square_length):
     h, w = img_shape
-    square_length = square_length * 2
+    square_length = square_length
     grid_h = h // square_length
     grid_w = w // square_length
     
@@ -106,25 +106,46 @@ def lambda_transform_with_grid(data, grid):
 
     return data
 
-def lambda_transform(data, noise_level=50):
+def lambda_transform(data):
     img = data['img']
     concat = data['concat']
     
-    square_length = random.choice([8, 16, 32, 48])
+    square_length = random.choice([8, 16, 32])
     mask = generate_single_mask(img.shape[-2:], square_length)
     mask = apply_random_shift(mask, square_length)
     
     mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
     img_tensor = img.clone().detach()
     
-    masked_img = img_tensor * (1 - mask_tensor)
+    r = random.randint(15, 25)
+    noisy_img = add_gaussian_noise(img_tensor, mean=0, variance=r / 1000) 
+    masked_img = img_tensor * (1 - mask_tensor) + noisy_img * mask_tensor
     
     combined = torch.cat([concat, masked_img], dim=0)
     
-    data['concat'] = combined / 122.5 - 1
-    data['img'] = img / 122.5 - 1
+    data['concat'] = combined / 127.5 - 1
+    data['img'] = img / 127.5 - 1
 
     return data
+
+
+def add_gaussian_noise(image, mean=0, variance=0.02):
+    """
+    Add Gaussian noise to a grayscale image.
+    
+    Parameters:
+        image (numpy.ndarray): Grayscale image.
+        mean (float): Mean of the Gaussian noise.
+        variance (float): Variance of the Gaussian noise.
+        
+    Returns:
+        numpy.ndarray: Noisy image.
+    """
+    sigma = variance ** 0.5
+    gaussian = np.random.normal(mean, sigma, image.shape)
+    noisy_image = image + gaussian * 255
+    noisy_image = np.clip(noisy_image, 0, 255)  # Ensure values are within [0, 1]
+    return torch.tensor(noisy_image, dtype=torch.float)
 
 def load_config(config_path: str):
     '''

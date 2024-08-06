@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -46,23 +46,23 @@ def train(input_dir, mask_dir=None):
     #     val_batch_size=max(1, BATCH_SIZE // 2),
     #     with_condition=True,
     # )
-    model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=0-step=30000-val_loss=0.0015.ckpt"
+    # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/last-v3.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
         val_ds=val_ds,
-        dl_workers=16,
+        dl_workers=4,
         train_sampler=train_sampler,
         batch_size=BATCH_SIZE,
         val_batch_size=max(1, BATCH_SIZE // 2),
         with_condition=True,
     )
-    model.load_ckpt(model_path, ema=True)
+    # model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
         max_steps=TRAIN_ITERATIONS,
-        val_check_interval=1, # Epochs, not steps now, for DDP protocol
+        val_check_interval=1000, # Epochs, not steps now, for DDP protocol
         root_directory="./outputs/",
         precision="16-mixed",
         devices=-1,

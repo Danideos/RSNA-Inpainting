@@ -65,6 +65,7 @@ def display_metrics(grid_key, square_key, index, is_inpainted, _column):
                     st.write(f"EMD: {metrics['emd']}")
                     st.write(f"Standard Deviation: {metrics['std_dev_diff']}")
                     st.write(f"MSE: {metrics['mse']}")
+                    
                     # Threshold stats
                     st.write(f"Threshold Difference Percent: {threshold['difference_percent']}")
 
