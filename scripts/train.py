@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -46,7 +46,7 @@ def train(input_dir, mask_dir=None):
     #     val_batch_size=max(1, BATCH_SIZE // 2),
     #     with_condition=True,
     # )
-    model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=0-step=30000-val_loss=0.0015.ckpt"
+    # model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=0-step=30000-val_loss=0.0015.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
@@ -57,7 +57,7 @@ def train(input_dir, mask_dir=None):
         val_batch_size=max(1, BATCH_SIZE // 2),
         with_condition=True,
     )
-    model.load_ckpt(model_path, ema=True)
+    # model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
@@ -68,7 +68,7 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="3A100_conditional_grid_masks",
+        logger_instance="4A100_simplex_conditional_grid_masks",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
