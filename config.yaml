@@ -52,4 +52,4 @@ hyperparameters:
   total_image_seen: 40e6
   batch_size: 13
   accumulate_grad_batches: 1
-  num_devices: 3
+  num_devices: 4

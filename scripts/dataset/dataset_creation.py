@@ -1,11 +1,13 @@
 from sklearn.model_selection import train_test_split
 from monai.data import Dataset
 import monai.transforms as mt
-from utils import add_channel, lambda_transform
+from utils import add_channel, lambda_transform, generate_masks_and_noise
 import torch
 import glob
 import os
 from tqdm import tqdm 
+
+MASKS_AND_NOISE = generate_masks_and_noise(amount=64000)
 
 
 def create_data_dicts(data_dir, mask_dir):
@@ -30,7 +32,7 @@ def create_transforms(img_size, resize_size):
         mt.RandFlipD(keys=["img", "concat"], prob=0.5, spatial_axis=1),
         mt.ResizeWithPadOrCropD(keys=["img", "concat"], spatial_size=(img_size, img_size)),
         mt.ResizeD(keys=["img", "concat"], spatial_size=(resize_size, resize_size)),
-        mt.Lambda(func=lambda x: lambda_transform(x)),
+        mt.Lambda(func=lambda x: lambda_transform(x, MASKS_AND_NOISE)),
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])
 
