@@ -19,16 +19,17 @@ from scipy.ndimage import convolve
 
 
 def generate_masks_and_noise(amount=50000):
-    masks = Parallel(n_jobs=-1)(delayed(generate_single_mask_and_noise)(square_length, shift)
-                                for square_length in [8, 16, 32]
+    
+    masks = Parallel(n_jobs=-1)(delayed(generate_single_mask_and_noise)(square_length, shift, i * shift)
+                                for square_length in [8, 16, 32, 48]
                                 for shift in range(4)
-                                for _ in tqdm(range(amount // 12)))
+                                for i in tqdm(range(amount // 12)))
     return masks
 
-def generate_single_mask_and_noise(square_length, shift):
+def generate_single_mask_and_noise(square_length, shift, seed=None):
     mask = generate_single_mask((256, 256), square_length, shift)
-    r = random.randint(175, 225)
-    noise = generate_simplex_noisy_img((256, 256), square_length, amplitude=r / 1000)
+    r = random.randint(150, 225)
+    noise = generate_simplex_noisy_img((256, 256), square_length, amplitude=r / 1000, seed=seed)
     return (mask, noise)
 
 def get_dicom_file_series_info(file_path):
@@ -89,7 +90,7 @@ def generate_single_mask(img_shape, square_length, shift):
 
     all_squares = [(y, x) for y in range(grid_h) for x in range(grid_w)]
     random.shuffle(all_squares)
-    n = random.randint(0, len(all_squares) // 8)
+    n = max(random.randint(-len(all_squares) // 16, len(all_squares) // 8), 0)
     selected_squares = all_squares[:n]
     
     for y, x in selected_squares:
@@ -134,14 +135,14 @@ def lambda_transform_with_grid(data, grid):
 
     return data
 
-def lambda_transform(data, masks):
+def lambda_transform(data, masks_and_noise):
     img = data['img']
     concat = data['concat']
     
     # square_length = random.choice([8, 16, 32])
     # mask = generate_single_mask(img.shape[-2:], square_length)
-    random_mask = random.randint(0, len(masks) - 1)
-    mask, noise = masks[random_mask]
+    random_mask = random.randint(0, len(masks_and_noise) - 1)
+    mask, noise = masks_and_noise[random_mask]
 
     mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
     img_tensor = torch.tensor(img, dtype=torch.float).unsqueeze(0)
@@ -152,9 +153,9 @@ def lambda_transform(data, masks):
     
     unmasked_img = img_tensor * (1 - mask_tensor) + simplex_tensor * mask_tensor
 
-    plt.imshow(unmasked_img.squeeze().numpy(), cmap='gray')
-    plt.title('Masked Image with Simplex Noise')
-    plt.show()
+    # plt.imshow(unmasked_img.squeeze().numpy(), cmap='gray')
+    # plt.title('Masked Image with Simplex Noise')
+    # plt.show()
     combined = torch.cat([concat, unmasked_img.squeeze(0)], dim=0)
     
     data['concat'] = combined / 127.5 - 1
@@ -173,12 +174,13 @@ def smooth_mask_edges(mask, square_length):
     
     return smoothed_mask
 
-def generate_simplex_noisy_img(img_shape, square_length, frequency=2**-6, amplitude=0.225, octaves=6, decay=0.8, ):
+def generate_simplex_noisy_img(img_shape, square_length, frequency=2**-6, amplitude=0.225, octaves=6, decay=0.8, seed=None):
     height, width = img_shape
     noise = np.zeros((height, width))
     frequency = (32 / square_length) * frequency
     
-    seed = random.randint(0, 10000)
+    if seed is None:
+        seed = random.randint(0, 10000)
     
     for i in range(height):
         for j in range(width):
