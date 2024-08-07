@@ -12,14 +12,14 @@ from utils import create_divisible_masks, prepare_model, lambda_transform_with_g
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
-def preprocess_images(png_paths, mask_paths, args, img_size=512, resize_size=256, grid=None):
+def preprocess_images(png_paths, mask_paths, args, img_size=512, resize_size=256, grid=None, square_length=None):
     device = 'cuda' if not args.use_cpu and torch.cuda.is_available() else 'cpu'
     data_transforms = mt.Compose([
         mt.LoadImageD(keys=["img", "concat"]),
         mt.LambdaD(keys=["img", "concat"], func=lambda x: add_channel(x)),
         mt.ResizeWithPadOrCropD(keys=["img", "concat"], spatial_size=(img_size, img_size)), 
         mt.ResizeD(keys=["img", "concat"], spatial_size=(resize_size, resize_size)), 
-        mt.Lambda(func=lambda x: lambda_transform_with_grid(x, grid)),
+        mt.Lambda(func=lambda x: lambda_transform_with_grid(x, grid, square_length)),
         # mt.ScaleIntensityD(keys=["img", "concat"], minv=-1, maxv=1),
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])

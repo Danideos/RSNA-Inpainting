@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config_path = os.getenv('MODEL_CONFIG_PATH')
-model_path = os.getenv('MODEL_PATH')
+model_path = '/home/bje01/Documents/RSNA-Inpainting/outputs/pl/epoch=0-step=45000-val_loss=0.0009.ckpt'
 
 model = prepare_model(config_path, model_path, device=device)
 
@@ -62,7 +62,7 @@ def get_inpainted_square(square, image_path, contour_path, grid_mask, img_size=2
 
     # Preprocess image and mask
     grid_mask = torch.tensor(grid_mask).transpose(1, 0)
-    img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], args, img_size=512, resize_size=img_size, grid=grid_mask)
+    img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], args, img_size=512, resize_size=img_size, grid=grid_mask, square_length=square_length)
 
     # Inpaint image
     grid_mask = grid_mask.unsqueeze(0).unsqueeze(0).float()
@@ -70,7 +70,7 @@ def get_inpainted_square(square, image_path, contour_path, grid_mask, img_size=2
 
     # Convert the inpainted image tensor to a numpy array
     inpainted_square = inpainted_imgs[0].cpu().numpy().transpose(2, 1, 0).squeeze(2)
-    inpainted_square = ((inpainted_square + 1) * 122.5).astype(np.uint8)
+    inpainted_square = ((inpainted_square + 1) * 127.5).astype(np.uint8)
     inpainted_square = inpainted_square[y:y + square_length, x:x + square_length]
     
     return inpainted_square
@@ -85,7 +85,7 @@ def get_inpainted_image_squares(image_path, contour_path, img_size, square_lengt
             grid_mask = st.session_state['masks'][square_length][(i % 3 + 3 * (j % 3)) * 4 + offset]
              # Preprocess image and mask
             grid_mask = torch.tensor(grid_mask).transpose(1, 0)
-            img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], args, img_size=512, resize_size=img_size, grid=grid_mask)
+            img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], args, img_size=512, resize_size=img_size, grid=grid_mask, square_length=square_length)
 
             # Inpaint image
             grid_mask = grid_mask.unsqueeze(0).unsqueeze(0).float()

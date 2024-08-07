@@ -7,7 +7,7 @@ import glob
 import os
 from tqdm import tqdm 
 
-MASKS_AND_NOISE = generate_masks_and_noise(amount=64000)
+MASKS_AND_NOISE = generate_masks_and_noise(amount=60000)
 
 
 def create_data_dicts(data_dir, mask_dir):

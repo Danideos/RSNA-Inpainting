@@ -2,17 +2,18 @@
 from PIL import Image
 import numpy as np
 import streamlit as st
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 import pickle 
 import streamlit as st
 
-load_dotenv()
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
 
 
 class DataManager:
     def __init__(self):
-        self.default_image = os.getenv('UNHEALTHY_PATH')
+        self.default_image = '/home/bje01/Documents/Data/prepared_data_test_series/healthy/train/ID_1a5a38bd32/bet_png/s14_ID_2e20638e4_0.png'#os.getenv('UNHEALTHY_PATH')
 
     def ask_for_image_path(self):
         image_path = st.text_input('Enter the path to your image:', self.default_image)
