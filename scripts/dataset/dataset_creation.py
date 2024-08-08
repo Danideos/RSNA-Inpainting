@@ -7,7 +7,7 @@ import glob
 import os
 from tqdm import tqdm 
 
-MASKS_AND_NOISE = generate_masks_and_noise(amount=60000)
+# MASKS_AND_NOISE = generate_masks_and_noise(amount=60000)
 
 
 def create_data_dicts(data_dir, mask_dir):
@@ -32,7 +32,7 @@ def create_transforms(img_size, resize_size):
         mt.RandFlipD(keys=["img", "concat"], prob=0.5, spatial_axis=1),
         mt.ResizeWithPadOrCropD(keys=["img", "concat"], spatial_size=(img_size, img_size)),
         mt.ResizeD(keys=["img", "concat"], spatial_size=(resize_size, resize_size)),
-        mt.Lambda(func=lambda x: lambda_transform(x, MASKS_AND_NOISE)),
+        mt.Lambda(func=lambda x: lambda_transform(x)),
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])
 

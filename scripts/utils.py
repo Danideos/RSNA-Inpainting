@@ -16,6 +16,7 @@ from collections import defaultdict
 from tqdm import tqdm
 from noise import snoise3
 from scipy.ndimage import convolve
+import cv2
 
 
 def generate_masks_and_noise(amount=12000):
@@ -75,7 +76,7 @@ def analyze_csv(csv_file, series_to_slices):
 
     return series_label_counts
 
-def generate_single_mask(img_shape, square_length, shift, noise_high, noise_low):
+def generate_single_mask(img_shape, square_length, shift=None):
     h, w = img_shape
     grid_h = h // square_length
     grid_w = w // square_length
@@ -83,43 +84,42 @@ def generate_single_mask(img_shape, square_length, shift, noise_high, noise_low)
     i = random.randint(0, 2)
     j = random.randint(0, 2)
     mask = np.zeros((h, w), dtype=np.uint8)
-    if random.random() < 0.5:
-        noise_high = noise_low.copy()
-    noise = noise_low.copy()
+    # if random.random() < 0.5:
+    #     noise_high = noise_low.copy()
+    # noise = noise_low.copy()
     
     for y in range(j, grid_h, 3):
         for x in range(i, grid_w, 3):
             mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
-            if random.random() < 0.5:
-                noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-            else:
-                noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
+            # if random.random() < 0.5:
+            #     noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
+            # else:
+            #     noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
 
-    all_squares = [(y, x) for y in range(grid_h) for x in range(grid_w)]
-    random.shuffle(all_squares)
-    n = random.choice(0, len(all_squares) // 10)
-    selected_squares = all_squares[:n]
+    # all_squares = [(y, x) for y in range(grid_h) for x in range(grid_w)]
+    # random.shuffle(all_squares)
+    # n = random.choice(0, len(all_squares) // 10)
+    # selected_squares = all_squares[:n]
     
-    for y, x in selected_squares:
-        mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
-        if random.random() < 0.5:
-            noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-        else:
-            noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-    mask, noise = apply_random_shift(mask, noise, square_length, shift)
-    mask = smooth_mask_edges(mask, square_length)
+    # for y, x in selected_squares:
+    #     mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
+    #     if random.random() < 0.5:
+    #         noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
+    #     else:
+    #         noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
+    mask = apply_random_shift(mask, square_length, shift)
+    # mask = smooth_mask_edges(mask, square_length)
     
-    return mask, noise
+    return mask
 
-def apply_random_shift(mask, noise, square_length, shift=None):
+def apply_random_shift(mask, square_length, shift=None):
     if shift is None:
         shift_x = random.choice([0, square_length // 2])
         shift_y = random.choice([0, square_length // 2])
     else:
         shift_x, shift_y = (shift % 2) * square_length // 2, (shift // 2) * square_length // 2
     shifted_mask = np.roll(np.roll(mask, shift_x, axis=1), shift_y, axis=0)
-    noise = np.roll(np.roll(noise, shift_x, axis=1), shift_y, axis=0)
-    return shifted_mask, noise
+    return shifted_mask
 
 def plot_image(tensor, title):
     img = tensor.squeeze().detach().cpu().numpy()
@@ -134,20 +134,20 @@ def lambda_transform_with_grid(data, grid, square_length):
     concat = data['concat']
     
     mask = np.asarray(grid)
-    mask = smooth_mask_edges(mask, square_length)
+    # mask = smooth_mask_edges(mask, square_length)
 
     mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)  # Add channel dimension
     img_tensor = torch.tensor(img, dtype=torch.float)
     
-    noise = generate_simplex_noisy_img((256, 256), square_length, amplitude=0.1)
-    simplex_img = img + noise * 255
-    simplex_img = np.clip(simplex_img, 0, 255)
-    simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
+    # noise = generate_simplex_noisy_img((256, 256), square_length, amplitude=0.225)
+    # simplex_img = img + noise * 255
+    # simplex_img = np.clip(simplex_img, 0, 255)
+    # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
 
-    masked_img = img_tensor * (1 - mask_tensor) + simplex_tensor * mask_tensor
-    plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
-    plt.title('Masked Image with Simplex Noise')
-    plt.show()
+    masked_img = img_tensor * (1 - mask_tensor) #+ simplex_tensor * mask_tensor
+    # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
+    # plt.title('Masked Image with Simplex Noise')
+    # plt.show()
     combined = torch.cat([concat, masked_img], dim=0)
     
     
@@ -156,27 +156,24 @@ def lambda_transform_with_grid(data, grid, square_length):
 
     return data
 
-def lambda_transform(data, masks_and_noise):
+def lambda_transform(data):
     img = data['img']
     concat = data['concat']
     
-    # square_length = random.choice([8, 16, 32])
-    # mask = generate_single_mask(img.shape[-2:], square_length)
-    random_mask = random.randint(0, len(masks_and_noise) - 1)
-    mask, noise = masks_and_noise[random_mask]
+    square_length = random.choice([8, 16, 32, 48, 64])
+    mask = generate_single_mask(img.shape[-2:], square_length)
+    # random_mask = random.randint(0, len(masks_and_noise) - 1)
+    # mask, noise = masks_and_noise[random_mask]
     mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
-    img_tensor = torch.tensor(img, dtype=torch.float).unsqueeze(0)
+    img_tensor = torch.tensor(img, dtype=torch.float)
 
-    simplex_img = img + noise * 255
-    simplex_img = np.clip(simplex_img, 0, 255)
-    simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
+    # simplex_img = img + noise * 255
+    # simplex_img = np.clip(simplex_img, 0, 255)
+    # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
     
-    masked_img = img_tensor * (1 - mask_tensor) + simplex_tensor * mask_tensor
+    masked_img = img_tensor * (1 - mask_tensor) # + simplex_tensor * mask_tensor
 
-    # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
-    # plt.title('Masked Image with Simplex Noise')
-    # plt.show()
-    combined = torch.cat([concat, masked_img.squeeze(0)], dim=0)
+    combined = torch.cat([concat, masked_img], dim=0)
     
     data['concat'] = combined / 127.5 - 1
     data['img'] = img / 127.5 - 1
@@ -197,7 +194,7 @@ def smooth_mask_edges(mask, square_length):
 def generate_simplex_noisy_img(img_shape, square_length, frequency=2**-6, amplitude=0.225, octaves=6, decay=0.8, seed=None):
     height, width = img_shape
     noise = np.zeros((height, width))
-    
+    frequency = 32 / square_length * frequency
     if seed is None:
         seed = random.randint(0, 10000)
     

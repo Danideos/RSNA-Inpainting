@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config_path = os.getenv('MODEL_CONFIG_PATH')
-model_path = '/home/bje01/Documents/RSNA-Inpainting/outputs/pl/epoch=0-step=45000-val_loss=0.0009.ckpt'
+model_path = '/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=97-step=238238-val_loss=0.0014.ckpt'
 
 model = prepare_model(config_path, model_path, device=device)
 

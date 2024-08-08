@@ -59,18 +59,19 @@ def display_image_selector():
     image_path = data_manager.ask_for_image_path()
     image = data_manager.load_image(image_path, img_size)
     # series_path = ''
-    # series = DataManager.load_series(series_path)
+    # series, series_image_paths = DataManager.load_series(series_path)
 
     # Initialize streamlit states
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
     # Handle input from slider params
-    square_size, offset_option, x_index, y_index, inpaint_parameters = get_slider_parameters(square_lengths, img_size, image, image_path, middle)
+    square_size, offset_option, x_index, y_index, img_index, inpaint_parameters = get_slider_parameters(square_lengths, img_size, image, image_path, middle)
     square, grid_mask = get_square_and_mask(square_size, x_index, y_index, offset_option)  
 
     # Handle toggle buttons
     handle_visibility_toggle_buttons()
     handle_inpaint_toggle_buttons(image_path, image, square, grid_mask, img_size, inpaint_parameters, offset_option)
+    # handle_inpaint_toggle_buttons(series_image_paths[img_index], series[img_index], grid_mask, img_size, inpaint_parameters, offset_option)
     handle_metric_toggle_buttons(square, offset_option)
     handle_datamanagement_toggle_buttons()
     

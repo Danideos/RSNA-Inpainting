@@ -17,7 +17,7 @@ optimizer:
 
 validation:
   classifier_cond_scale: 4
-  protocol: DDIM250
+  protocol: DDIM100
   log_original: false
   log_concat: false
   log_cls_indices: -1 
@@ -50,6 +50,6 @@ model:
 hyperparameters:
   img_size: 512
   total_image_seen: 40e6
-  batch_size: 13
+  batch_size: 50
   accumulate_grad_batches: 1
-  num_devices: 1
+  num_devices: 3

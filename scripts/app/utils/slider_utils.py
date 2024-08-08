@@ -25,6 +25,7 @@ def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
 
             grid_dim = (img_size // square_length)
 
+            img_index = st.slide('Select Image Index:', 0, 100, st.session_state.image_index)
             x_index = st.slider('Select X Index:', 0, grid_dim - 1, st.session_state.x_index)
             y_index = st.slider('Select Y Index:', 0, grid_dim - 1, st.session_state.y_index)
 
@@ -68,4 +69,4 @@ def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
                 calculate_grid_metrics(image, image_path, square, offset_option, index)
                 ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, index)
             
-    return square_length, offset_option, x_index, y_index, inpaint_parameters
+    return square_length, offset_option, x_index, y_index, img_index, inpaint_parameters
