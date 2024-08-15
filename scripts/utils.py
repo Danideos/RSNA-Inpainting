@@ -160,7 +160,7 @@ def lambda_transform(data):
     img = data['img']
     concat = data['concat']
     
-    square_length = random.choice([8, 16, 32, 64, 128, 256])
+    square_length = random.choice([8, 16, 32, 64])
     mask = generate_single_mask(img.shape[-2:], square_length)
     # random_mask = random.randint(0, len(masks_and_noise) - 1)
     # mask, noise = masks_and_noise[random_mask]

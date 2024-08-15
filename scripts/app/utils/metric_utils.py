@@ -100,6 +100,9 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
 def calculate_grid_metrics(image, image_path, square, offset, img_index, index=None):
     apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset, img_index, index)
 
+def calculate_series_metrics():
+    pass
+
 def navigate_metrics(img_index, grid_key, square_key, direction):
     metrics_amount = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'])
     metrics_index = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index']
@@ -124,28 +127,28 @@ def handle_metric_toggle_buttons(square, offset, img_index):
             if st.button('Next'):
                 navigate_metrics(img_index, grid_key, square_key, 1)
 
-@st.cache_data
-def compute_emd_2d_distance_matrix(size):
-    distance_matrix = np.zeros((size * size, size * size))
-    for i in range(size):
-        for j in range(size):
-            for k in range(size):
-                for l in range(size):
-                    distance_matrix[i * size + j, k * size + l] = (i - k)**2 + (j - l)**2
-    return distance_matrix
+# @st.cache_data
+# def compute_emd_2d_distance_matrix(size):
+#     distance_matrix = np.zeros((size * size, size * size))
+#     for i in range(size):
+#         for j in range(size):
+#             for k in range(size):
+#                 for l in range(size):
+#                     distance_matrix[i * size + j, k * size + l] = (i - k)**2 + (j - l)**2
+#     return distance_matrix
 
-emd_distance_matrices = {
-    64: compute_emd_2d_distance_matrix(64),
-    48: compute_emd_2d_distance_matrix(48),
-    32: compute_emd_2d_distance_matrix(32),
-    16: compute_emd_2d_distance_matrix(16),
-    8: compute_emd_2d_distance_matrix(8),
-}
+# emd_distance_matrices = {
+#     64: compute_emd_2d_distance_matrix(64),
+#     48: compute_emd_2d_distance_matrix(48),
+#     32: compute_emd_2d_distance_matrix(32),
+#     16: compute_emd_2d_distance_matrix(16),
+#     8: compute_emd_2d_distance_matrix(8),
+# }
 
-emd_alpha = {
-    64: 512,
-    48: 256,
-    32: 128,
-    16: 32,
-    8: 8,
-}
+# emd_alpha = {
+#     64: 512,
+#     48: 256,
+#     32: 128,
+#     16: 32,
+#     8: 8,
+# }

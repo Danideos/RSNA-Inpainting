@@ -17,6 +17,10 @@ class ThresholdingPipeline:
     pixel_exceed_count = 32
 
     @staticmethod
+    def calculate_series_thresholds():
+        pass
+
+    @staticmethod
     def calculate_grid_thresholds(image, square_length, offset, img_index, index=None):
         apply_func_to_grid(square_length, offset, image.size[0], ThresholdingPipeline.calculate_square_threshold, image, square_length, offset, img_index, index)
 
@@ -61,7 +65,7 @@ class ThresholdingPipeline:
         update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
   
     @staticmethod
-    def calculate_all_thresholds():
+    def calculate_series_thresholds():
         pass
     
     @staticmethod

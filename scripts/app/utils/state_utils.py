@@ -33,7 +33,6 @@ def init_inpainted_square(img_index, grid_key, square_key):
     st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'thresholds': []}
 
 def update_inpainted_square(img_index, grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None, threshold=None):
-    print(img_index, grid_key, square_key)
     if square_key not in st.session_state['all_inpainted_square_images'][img_index][grid_key]:
         init_inpainted_square(img_index, grid_key, square_key)
     if inpainted_square is not None:

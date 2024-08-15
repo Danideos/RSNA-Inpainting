@@ -49,7 +49,7 @@ def display_image_selector():
     left, middle, right = st.columns([1, 2, 2])
 
     img_size = 256
-    square_lengths = [64, 48, 32, 16, 8]
+    square_lengths = [64, 32, 16, 8]
 
     data_manager = DataManager() 
     with middle:
@@ -61,7 +61,7 @@ def display_image_selector():
 
     # image_path = data_manager.ask_for_image_path()
     # image = data_manager.load_image(image_path, img_size)
-    series_path = '/home/bje01/Documents/Data/prepared_data_test_series/unhealthy/train/ID_2bcad8c908/bet_png/'
+    series_path = '/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train/ID_0ac08adb64/bet_png'
     series, series_image_paths = DataManager.load_series(series_path)
 
     # Handle input from slider params
@@ -70,12 +70,12 @@ def display_image_selector():
 
     # Handle toggle buttons
     handle_visibility_toggle_buttons()
-    handle_inpaint_toggle_buttons(image_path, image, square, grid_mask, img_size, inpaint_parameters, offset_option, img_index)
+    handle_inpaint_toggle_buttons(series, series_image_paths, square_lengths, square, grid_mask, img_size, inpaint_parameters, offset_option, img_index)
     handle_metric_toggle_buttons(square, offset_option, img_index)
     handle_datamanagement_toggle_buttons()
     
     # Show the image
-    show_image(image, square, grid_mask, offset_option, img_index, middle, right)
+    show_image(image, image_path, square, grid_mask, offset_option, img_index, middle, right)
 
 if __name__ == "__main__":
     display_image_selector()

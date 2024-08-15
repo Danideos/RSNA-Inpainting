@@ -12,6 +12,21 @@ from utils import create_divisible_masks, prepare_model, lambda_transform_with_g
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
+class LambdaTransformWithOptionalGrid(mt.Transform):
+    def __init__(self, func, grid, square_length):
+        self.func = func
+        self.grid = grid
+        self.square_length = square_length
+
+    def __call__(self, data):
+        current_grid = self.grid  
+
+        if isinstance(self.grid, list) and 'index' in data:
+            current_grid = self.grid[data['index']]  
+
+        data = self.func(data, current_grid, self.square_length)
+        return data
+
 def preprocess_images(png_paths, mask_paths, args, img_size=512, resize_size=256, grid=None, square_length=None):
     device = 'cuda' if not args.use_cpu and torch.cuda.is_available() else 'cpu'
     data_transforms = mt.Compose([
@@ -19,11 +34,11 @@ def preprocess_images(png_paths, mask_paths, args, img_size=512, resize_size=256
         mt.LambdaD(keys=["img", "concat"], func=lambda x: add_channel(x)),
         mt.ResizeWithPadOrCropD(keys=["img", "concat"], spatial_size=(img_size, img_size)), 
         mt.ResizeD(keys=["img", "concat"], spatial_size=(resize_size, resize_size)), 
-        mt.Lambda(func=lambda x: lambda_transform_with_grid(x, grid, square_length)),
+        LambdaTransformWithOptionalGrid(func=lambda_transform_with_grid, grid=grid, square_length=square_length),
         # mt.ScaleIntensityD(keys=["img", "concat"], minv=-1, maxv=1),
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])
-    png_imgs = [{"img": png_paths[i], "concat": mask_paths[i]} for i in range(args.num_images)]
+    png_imgs = [{"img": png_paths[i], "concat": mask_paths[i], "index": i} for i in range(args.num_images)]
     img_ids = [os.path.basename(png_path).split(".")[0] for png_path in png_paths[:args.num_images]]
     transformed_imgs = data_transforms(png_imgs)
     img_tensors = torch.stack([img_dict["img"] for img_dict in transformed_imgs], dim=0).to(device)

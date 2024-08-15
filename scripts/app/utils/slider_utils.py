@@ -62,13 +62,13 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
             if st.button('Recalculate Thresholds'):
                 dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
                 square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
-                index = get_current_index(square, offset_option)
-                ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, index)
+                index = get_current_index(img_index, square, offset_option)
+                ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, img_index, index)
             if st.button('Recalculate Metrics'):
                 dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
                 square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
-                index = get_current_index(square, offset_option)
+                index = get_current_index(img_index, square, offset_option)
                 calculate_grid_metrics(image, image_path, square, offset_option, index)
-                ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, index)
+                ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, img_index, index)
             
     return square_length, offset_option, x_index, y_index, img_index, inpaint_parameters, image, image_path

@@ -51,11 +51,37 @@ def inpaint_grid(image_path, img_size, square, offset, img_index, inpaint_parame
     square_length = square[2]
     all_inpainted_squares = get_inpainted_image_squares(image_path, contour_path, img_size, square_length, offset, inpaint_parameters)
 
-    grid_key, _ = get_keys(square, offset)
-    for inpainted_square, inpainted_x, inpainted_y, square_length, offset in all_inpainted_squares:
-        square_key = (inpainted_x, inpainted_y)
-        update_inpainted_square(img_index, grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
+    update_inpainted_squares(all_inpainted_squares, img_index, inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
+
+def inpaint_series(series, series_image_paths, square_lengths, img_index, img_size, inpaint_parameters=None):
+    batch_size = 10
+    batch_images, batch_paths, batch_masks, batch_params = [], [], [], []
+    for img_index in len(series):
+        for square_length in square_lengths:
+            for offset in range(4):
+                for i in range(3):
+                    for j in range(3):
+                        image, image_path = series[img_index], series_image_paths[img_index]
+                        mask = st.session_state['masks'][square_length][(i % 3 + 3 * (j % 3)) * 4 + offset]
+
+                        batch_images.append(image)
+                        batch_paths.append(image_path)
+                        batch_masks.append(mask)
+                        batch_params.append((i, j, square_length, offset))
+                        if len(batch_images) >= batch_size:
+                            inpaint_batch(batch_images, batch_paths, batch_masks, batch_params, img_index, img_size, inpaint_parameters)
+                            batch_images, batch_paths, batch_masks, batch_params = [], [], [], []
+
+    st.session_state['show_inpainted_square'] = True
+
+def inpaint_batch(batch_images, batch_paths, batch_masks, batch_params, img_index, img_size, inpaint_parameters):
+    contour_paths = [get_contour_path(image_path) for image_path in batch_paths]
+    batch_inpainted_squares = get_inpainted_batch_squares(batch_images, batch_paths, contour_paths, batch_masks, batch_params, img_index, img_size, inpaint_parameters)
+
+    update_inpainted_squares(batch_inpainted_squares, img_index, inpaint_parameters=inpaint_parameters)
+    st.session_state['show_inpainted_square'] = True
+
 
 def get_inpainted_square(square, image_path, contour_path, grid_mask, img_size=256, inpaint_parameters=None):
     x, y, square_length = square
@@ -95,15 +121,40 @@ def get_inpainted_image_squares(image_path, contour_path, img_size, square_lengt
             inpainted_img = inpainted_imgs[0].cpu().numpy().transpose(2, 1, 0).squeeze(2)
             inpainted_img = ((inpainted_img + 1) / 2 * 255).astype(np.uint8)
 
-            # Extract the inpainted squares
-            dx, dy = (offset % 2) * square_length // 2, (offset // 2) * square_length // 2
-            for y in range(i * square_length, img_size, 3 * square_length):
-                for x in range(j * square_length, img_size, 3 * square_length):
-                    x_off = x + dy
-                    y_off = y + dx
-                    if x_off + square_length <= img_size and y_off + square_length <= img_size:
-                        inpainted_square = inpainted_img[x_off:x_off + square_length, y_off:y_off + square_length]
-                        inpainted_mask_squares.append((inpainted_square, y_off, x_off, square_length, offset))
+            inpainted_mask_squares.extend(extract_inpainted_squares(i, j, square_length, offset, img_size, inpainted_img))
 
     return inpainted_mask_squares
+
+def get_inpainted_batch_squares(batch_images, batch_paths, batch_masks, contour_paths, batch_params, img_index, img_size, inpaint_parameters):
+    args = create_args(batch_paths[0], 0, inpaint_parameters)
+
+    grid_masks = torch.stack([torch.from_numpy(mask).transpose(-1, -2) for mask in batch_masks], dim=0)
+    img_tensors, concat_tensors, img_ids = preprocess_images(batch_paths, contour_paths, args, img_size=512, resize_size=img_size, grid=grid_masks, square_length=square_length)
+
+    grid_masks = grid_masks.unsqueeze(0).float()
+    inpainted_imgs = inpaint_images(model, img_tensors, concat_tensors, grid_masks, args, noise_shape=(1, img_size, img_size), device=device)
+
+    inpainted_mask_squares = []
+    for i in range(len(batch_images)):
+        inpainted_img = inpainted_imgs[i].cpu().numpy().transpose(2, 1, 0).squeeze(2)
+        inpainted_img = ((inpainted_img + 1) / 2 * 255).astype(np.uint8)
+        i, j, square_length, offset = batch_params[i]
+        inpainted_mask_squares.extend(extract_inpainted_squares(i, j, square_length, offset, img_size, inpainted_img))
+    return inpainted_mask_squares 
             
+def extract_inpainted_squares(i, j, square_length, offset, img_size, inpainted_img):
+    inpainted_mask_squares = []
+    dx, dy = (offset % 2) * square_length // 2, (offset // 2) * square_length // 2
+    for y in range(i * square_length, img_size, 3 * square_length):
+        for x in range(j * square_length, img_size, 3 * square_length):
+            x_off = x + dy
+            y_off = y + dx
+            if x_off + square_length <= img_size and y_off + square_length <= img_size:
+                inpainted_square = inpainted_img[x_off:x_off + square_length, y_off:y_off + square_length]
+                inpainted_mask_squares.append((inpainted_square, y_off, x_off, square_length, offset))
+    return inpainted_mask_squares
+
+def update_inpainted_squares(all_inpainted_squares, img_index, inpaint_parameters):
+    for inpainted_square, inpainted_x, inpainted_y, square_length, offset in all_inpainted_squares:
+        grid_key, square_key = (square_length, offset), (inpainted_x, inpainted_y)
+        update_inpainted_square(img_index, grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)

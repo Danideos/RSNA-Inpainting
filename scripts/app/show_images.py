@@ -8,19 +8,19 @@ from io import BytesIO
 import base64
 
 
-def show_image(image, square, mask, offset, img_index, _middle_col, _right_col):
+def show_image(image, image_path, square, mask, offset, img_index, _middle_col, _right_col):
     grid_key, square_key = get_keys(square, offset)
     is_inpainted = is_square_inpainted(img_index, grid_key, square_key)
     index = get_current_index(img_index, square, offset)
 
-    value = display_image(square, offset, image, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col)
+    value = display_image(square, offset, image, image_path, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col)
     display_metrics(img_index, grid_key, square_key, index, is_inpainted, _right_col)
     
     if value:
         set_x_and_y(value, image.size[0], square[2])
         value = None
 
-def display_image(square, offset, image, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col):
+def display_image(square, offset, image, image_path, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col):
     with _middle_col:
         x, y, square_length = square
 
@@ -33,6 +33,7 @@ def display_image(square, offset, image, mask, is_inpainted, grid_key, square_ke
 
         overlay_image = overlay_mask(image_copy, mask, square, offset, img_index)
         st.write(f'Square at X: {x // square_length}, Y: {y // square_length}, Index: {index},{add_info}')
+        st.write(f'{image_path}')
         st.image(overlay_image, use_column_width=True)
         value = None #streamlit_image_coordinates(overlay_image, use_column_width=True)
 
