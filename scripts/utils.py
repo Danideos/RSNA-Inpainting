@@ -160,7 +160,7 @@ def lambda_transform(data):
     img = data['img']
     concat = data['concat']
     
-    square_length = random.choice([8, 16, 32, 48, 64])
+    square_length = random.choice([8, 16, 32, 64, 128, 256])
     mask = generate_single_mask(img.shape[-2:], square_length)
     # random_mask = random.randint(0, len(masks_and_noise) - 1)
     # mask, noise = masks_and_noise[random_mask]
@@ -172,8 +172,7 @@ def lambda_transform(data):
     # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
     
     masked_img = img_tensor * (1 - mask_tensor) # + simplex_tensor * mask_tensor
-
-    combined = torch.cat([concat, masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
     
     data['concat'] = combined / 127.5 - 1
     data['img'] = img / 127.5 - 1

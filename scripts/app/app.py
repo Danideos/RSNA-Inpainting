@@ -49,35 +49,33 @@ def display_image_selector():
     left, middle, right = st.columns([1, 2, 2])
 
     img_size = 256
-    square_lengths = [32, 16, 8]
+    square_lengths = [64, 48, 32, 16, 8]
 
     data_manager = DataManager() 
     with middle:
         st.title('Inpainting Thresholding Tool')
         reload_modules()
-    
-    image_path = data_manager.ask_for_image_path()
-    image = data_manager.load_image(image_path, img_size)
-    # series_path = ''
-    # series, series_image_paths = DataManager.load_series(series_path)
 
     # Initialize streamlit states
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
+    # image_path = data_manager.ask_for_image_path()
+    # image = data_manager.load_image(image_path, img_size)
+    series_path = '/home/bje01/Documents/Data/prepared_data_test_series/unhealthy/train/ID_2bcad8c908/bet_png/'
+    series, series_image_paths = DataManager.load_series(series_path)
+
     # Handle input from slider params
-    square_size, offset_option, x_index, y_index, img_index, inpaint_parameters = get_slider_parameters(square_lengths, img_size, image, image_path, middle)
+    square_size, offset_option, x_index, y_index, img_index, inpaint_parameters, image, image_path = get_slider_parameters(square_lengths, img_size, series, series_image_paths, middle)
     square, grid_mask = get_square_and_mask(square_size, x_index, y_index, offset_option)  
 
     # Handle toggle buttons
     handle_visibility_toggle_buttons()
-    handle_inpaint_toggle_buttons(image_path, image, square, grid_mask, img_size, inpaint_parameters, offset_option)
-    # handle_inpaint_toggle_buttons(series_image_paths[img_index], series[img_index], grid_mask, img_size, inpaint_parameters, offset_option)
-    handle_metric_toggle_buttons(square, offset_option)
+    handle_inpaint_toggle_buttons(image_path, image, square, grid_mask, img_size, inpaint_parameters, offset_option, img_index)
+    handle_metric_toggle_buttons(square, offset_option, img_index)
     handle_datamanagement_toggle_buttons()
     
     # Show the image
-    show_image(image, square, grid_mask, offset_option, middle, right)
-
+    show_image(image, square, grid_mask, offset_option, img_index, middle, right)
 
 if __name__ == "__main__":
     display_image_selector()

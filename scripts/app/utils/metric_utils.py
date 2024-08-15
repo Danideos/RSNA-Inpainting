@@ -38,12 +38,12 @@ def calculate_lpips(original_array, inpainted_array, min_size=32):
     lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
     return lpips_value
 
-def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset, index=None):
+def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset, img_index, index=None):
     square = (inpainted_x, inpainted_y, square_length)
     grid_key, square_key = get_keys(square, offset)
-    metric_index = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) - 1
+    metric_index = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) - 1
 
-    inpainted_square = st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image'][metric_index]
+    inpainted_square = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image'][metric_index]
     original_square = image.crop((inpainted_x, inpainted_y, inpainted_x + square_length, inpainted_y + square_length))
 
     file_name = os.path.basename(image_path)
@@ -56,6 +56,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     # Ensure both images have 3 channels
     original_array, inpainted_array = ensure_3_channels(original_square, inpainted_square)
     lpips_value = calculate_lpips(original_array, inpainted_array)
+    # lpips_value = 0 # ignore LPIPS for now
 
     # Apply histogram calculation only to the white pixels in the contour mask
     mask = (contour_square == 255)
@@ -67,7 +68,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     inpainted_hist = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=False)[0].astype(np.float64)
 
     if original_histogram_values.size == 0 or inpainted_histogram_values.size == 0:
-        update_inpainted_square(grid_key, square_key, metrics=False)
+        update_inpainted_square(img_index, grid_key, square_key, metrics=False)
         return
     
     # Calculate difference in means
@@ -94,28 +95,34 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
         "mse": np.mean((original_histogram_values - inpainted_histogram_values) ** 2)
     }
 
-    update_inpainted_square(grid_key, square_key, metrics=metrics, index=index)
+    update_inpainted_square(img_index, grid_key, square_key, metrics=metrics, index=index)
 
-def calculate_grid_metrics(image, image_path, square, offset, index=None):
-    apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset, index)
+def calculate_grid_metrics(image, image_path, square, offset, img_index, index=None):
+    apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset, img_index, index)
 
-def navigate_metrics(grid_key, square_key, direction):
-    metrics_amount = len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'])
-    metrics_index = st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
-    st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] = (metrics_index + direction) % metrics_amount
+def navigate_metrics(img_index, grid_key, square_key, direction):
+    metrics_amount = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'])
+    metrics_index = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index']
+    st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] = (metrics_index + direction) % metrics_amount
 
-def handle_metric_toggle_buttons(square, offset):
+def handle_metric_toggle_buttons(square, offset, img_index):
     grid_key, square_key = get_keys(square, offset)
-    is_inpainted = is_square_inpainted(grid_key, square_key)
-    if is_inpainted and len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics']) > 1:
-        with st.sidebar:
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button('Previous'):
-                    navigate_metrics(grid_key, square_key, -1)
-            with col2:
-                if st.button('Next'):
-                    navigate_metrics(grid_key, square_key, 1)
+
+    is_inpainted = is_square_inpainted(img_index, grid_key, square_key)
+    if not is_inpainted:
+        return
+    metric_amount = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'])
+    if not metric_amount > 1:
+        return
+    
+    with st.sidebar:
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button('Previous'):
+                navigate_metrics(img_index, grid_key, square_key, -1)
+        with col2:
+            if st.button('Next'):
+                navigate_metrics(img_index, grid_key, square_key, 1)
 
 @st.cache_data
 def compute_emd_2d_distance_matrix(size):
@@ -128,12 +135,16 @@ def compute_emd_2d_distance_matrix(size):
     return distance_matrix
 
 emd_distance_matrices = {
+    64: compute_emd_2d_distance_matrix(64),
+    48: compute_emd_2d_distance_matrix(48),
     32: compute_emd_2d_distance_matrix(32),
     16: compute_emd_2d_distance_matrix(16),
     8: compute_emd_2d_distance_matrix(8),
 }
 
 emd_alpha = {
+    64: 512,
+    48: 256,
     32: 128,
     16: 32,
     8: 8,

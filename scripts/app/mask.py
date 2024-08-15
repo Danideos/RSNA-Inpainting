@@ -24,7 +24,6 @@ def create_masks(img_size, square_sizes):
                                 if x_off + size <= img_size and y_off + size <= img_size:
                                     mask[x_off:x_off + size, y_off:y_off + size] = 1
                         all_masks.append(mask)
-
         masks[size] = all_masks
 
     return masks
@@ -51,7 +50,7 @@ def get_or_create_grid_overlay(img_size, square_size, offset):
         st.session_state['grid_overlays'][grid_key] = create_grid_overlay(img_size, square_size, offset)
     return st.session_state['grid_overlays'][grid_key]
 
-def overlay_mask(image, mask, square, offset):
+def overlay_mask(image, mask, square, offset, img_index):
     if image.mode != 'RGBA':
         image = image.convert('RGBA')
 
@@ -72,17 +71,17 @@ def overlay_mask(image, mask, square, offset):
         overlay = Image.alpha_composite(overlay, mask_overlay)
 
     if st.session_state['show_thresholds']:
-        apply_func_to_grid(square[2], offset, image.size[0], overlay_thresholds, square[2], offset, overlay)
+        apply_func_to_grid(square[2], offset, image.size[0], overlay_thresholds, square[2], offset, img_index, overlay)
 
     combined = Image.alpha_composite(image, overlay)
     return combined
 
-def overlay_thresholds(x, y, square_length, offset, overlay):
+def overlay_thresholds(x, y, square_length, offset, img_index, overlay):
     square = (x, y, square_length)
     grid_key, square_key = get_keys(square, offset)
-    index = get_current_index(square, offset)
+    index = get_current_index(img_index, square, offset)
     if index is None: return
-    threshold = st.session_state['all_inpainted_square_images'][grid_key][square_key]['thresholds'][index]
+    threshold = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['thresholds'][index]
     is_thresholded = threshold['is_beyond_threshold']
     if is_thresholded:
         draw = ImageDraw.Draw(overlay)

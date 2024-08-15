@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -30,8 +30,9 @@ RESIZE_SIZE = model_params['input_size']
 
 def train(input_dir, mask_dir=None):    
     data_dir = os.path.join(input_dir, "bet_png")
-    mask_dir = os.path.join(input_dir, "edge_png")
-    train_ds, val_ds = create_dataset(data_dir, mask_dir, IMG_SIZE, RESIZE_SIZE)
+    mask_dir = os.path.join(input_dir, "mask_png")
+    edge_dir = os.path.join(input_dir, "edge_png")
+    train_ds, val_ds = create_dataset(data_dir, mask_dir, edge_dir, IMG_SIZE, RESIZE_SIZE)
     train_sampler, val_sampler = get_datasamplers(train_ds, val_ds, TOTAL_IMAGE_SEEN)
     print(f"train dataset size: {len(train_ds)}")
     torch.cuda.empty_cache()
@@ -62,13 +63,13 @@ def train(input_dir, mask_dir=None):
 
     trainer = Trainer(
         max_steps=TRAIN_ITERATIONS,
-        val_check_interval=1, # Epochs, not steps now, for DDP protocol
+        val_check_interval=3000, # Epochs, not steps now, for DDP protocol
         root_directory="./outputs/",
         precision="16-mixed",
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="edge_map+grid_masks",
+        logger_instance="edge_map+grid_masks_4090",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 

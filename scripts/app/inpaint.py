@@ -11,10 +11,11 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config_path = os.getenv('MODEL_CONFIG_PATH')
-model_path = '/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=97-step=238238-val_loss=0.0014.ckpt'
+# model_path = '/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=97-step=238238-val_loss=0.0014.ckpt'
+model_path = os.getenv('MODEL_PATH')
 
 model = prepare_model(config_path, model_path, device=device)
 
@@ -37,15 +38,15 @@ def create_args(image_path, square_length, inpaint_parameters):
     return args
 
 
-def inpaint_square(image_path, square, mask, img_size, offset, inpaint_parameters):
+def inpaint_square(image_path, square, mask, img_size, offset, img_index, inpaint_parameters):
     contour_path = get_contour_path(image_path)
-    inpainted_square = get_inpainted_square(square, image_path, contour_path, mask, img_size, inpaint_parameters=inpaint_parameters)
+    inpainted_square = get_inpainted_square(square, image_path, contour_path, mask, img_size=img_size, inpaint_parameters=inpaint_parameters)
     
     grid_key, square_key = get_keys(square, offset)
-    update_inpainted_square(grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
+    update_inpainted_square(img_index, grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
 
-def inpaint_grid(image_path, img_size, square, offset, inpaint_parameters):
+def inpaint_grid(image_path, img_size, square, offset, img_index, inpaint_parameters):
     contour_path = get_contour_path(image_path)
     square_length = square[2]
     all_inpainted_squares = get_inpainted_image_squares(image_path, contour_path, img_size, square_length, offset, inpaint_parameters)
@@ -53,7 +54,7 @@ def inpaint_grid(image_path, img_size, square, offset, inpaint_parameters):
     grid_key, _ = get_keys(square, offset)
     for inpainted_square, inpainted_x, inpainted_y, square_length, offset in all_inpainted_squares:
         square_key = (inpainted_x, inpainted_y)
-        update_inpainted_square(grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
+        update_inpainted_square(img_index, grid_key, square_key, inpainted_square=Image.fromarray(inpainted_square), inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
 
 def get_inpainted_square(square, image_path, contour_path, grid_mask, img_size=256, inpaint_parameters=None):

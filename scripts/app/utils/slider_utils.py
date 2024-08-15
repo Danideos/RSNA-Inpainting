@@ -17,7 +17,7 @@ def get_square_and_mask(square_length, x_index, y_index, offset_option):
 
     return square, mask
 
-def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
+def get_slider_parameters(square_lengths, img_size, series, series_image_paths, middle):
     with st.sidebar:
         with st.expander("Slider Parameters"):
             square_length = st.selectbox('Select Square Size:', square_lengths)
@@ -25,9 +25,11 @@ def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
 
             grid_dim = (img_size // square_length)
 
-            img_index = st.slide('Select Image Index:', 0, 100, st.session_state.image_index)
+            img_index = st.slider('Select Image Index:', 0, 100, st.session_state.img_index)
             x_index = st.slider('Select X Index:', 0, grid_dim - 1, st.session_state.x_index)
             y_index = st.slider('Select Y Index:', 0, grid_dim - 1, st.session_state.y_index)
+
+            image, image_path = series[img_index], series_image_paths[img_index]
 
         with st.expander("Inpainting Parameters"):
             start_denoise_step = st.slider('Select Start Denoise Step:', 1, 100, 100)
@@ -69,4 +71,4 @@ def get_slider_parameters(square_lengths, img_size, image, image_path, middle):
                 calculate_grid_metrics(image, image_path, square, offset_option, index)
                 ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, index)
             
-    return square_length, offset_option, x_index, y_index, img_index, inpaint_parameters
+    return square_length, offset_option, x_index, y_index, img_index, inpaint_parameters, image, image_path

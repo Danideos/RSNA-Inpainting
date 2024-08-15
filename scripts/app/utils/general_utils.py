@@ -6,7 +6,8 @@ import os
 def get_contour_path(image_path):
     file_name = os.path.basename(image_path)
     contour_path = "/".join(image_path.split("/")[:-2]) + "/mask_png/" + file_name
-    return contour_path
+    edge_path = "/".join(image_path.split("/")[:-2]) + "/edge_png/" + file_name
+    return (contour_path, edge_path)
 
 def get_keys(square, offset):
     x, y, square_length = square
@@ -14,10 +15,10 @@ def get_keys(square, offset):
     square_key = (x, y)
     return (grid_key, square_key)
 
-def get_current_index(square, offset):
+def get_current_index(img_index, square, offset):
     grid_key, square_key = get_keys(square, offset)
-    if square_key in st.session_state['all_inpainted_square_images'][grid_key]:
-        index = st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
+    if square_key in st.session_state['all_inpainted_square_images'][img_index][grid_key]:
+        index = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index']
         return index
     return None
 
@@ -29,8 +30,9 @@ def set_x_and_y(value, img_size, square_length):
 def get_inpainted_square_index(grid_key, square_key):
     return st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
 
-def is_square_inpainted(grid_key, square_key):
-    return square_key in st.session_state['all_inpainted_square_images'][grid_key] and st.session_state['all_inpainted_square_images'][grid_key][square_key]['index'] is not None
+def is_square_inpainted(img_index, grid_key, square_key):
+    return (square_key in st.session_state['all_inpainted_square_images'][img_index][grid_key] 
+            and st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] is not None)
 
 def ensure_3_channels(original_square, inpainted_square):
     original_array = np.asarray(original_square)

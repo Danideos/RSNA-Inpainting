@@ -17,11 +17,11 @@ class ThresholdingPipeline:
     pixel_exceed_count = 32
 
     @staticmethod
-    def calculate_grid_thresholds(image, square_length, offset, index=None):
-        apply_func_to_grid(square_length, offset, image.size[0], ThresholdingPipeline.calculate_square_threshold, image, square_length, offset, index)
+    def calculate_grid_thresholds(image, square_length, offset, img_index, index=None):
+        apply_func_to_grid(square_length, offset, image.size[0], ThresholdingPipeline.calculate_square_threshold, image, square_length, offset, img_index, index)
 
     @staticmethod
-    def calculate_square_threshold(x, y, image, square_length, offset, index=None):
+    def calculate_square_threshold(x, y, image, square_length, offset, img_index, index=None):
         grid_key, square_key = get_keys((x, y, square_length), offset)
         threshold = {
             'is_beyond_threshold': False,
@@ -29,9 +29,9 @@ class ThresholdingPipeline:
         }
 
         metrics_index = -1 if index is None else index
-        metrics = st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics'][metrics_index]
+        metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metrics_index]
         if not metrics:
-            update_inpainted_square(grid_key, square_key, threshold=threshold, index=index)
+            update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return
     
         original_histogram_values = metrics['original_histogram_data']
@@ -40,7 +40,7 @@ class ThresholdingPipeline:
         inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80))
 
         if not ThresholdingPipeline._is_valid_square(original_hist, square_length): 
-            update_inpainted_square(grid_key, square_key, threshold=threshold, index=index)
+            update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return 
 
         boundary_index = ThresholdingPipeline._get_boundary_index(inpainted_hist)
@@ -58,7 +58,7 @@ class ThresholdingPipeline:
             'difference_percent': total_difference / np.sum(original_hist) * 100
         }
 
-        update_inpainted_square(grid_key, square_key, threshold=threshold, index=index)
+        update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
   
     @staticmethod
     def calculate_all_thresholds():

@@ -33,8 +33,9 @@ def init_inpainted_square(img_index, grid_key, square_key):
     st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key] = {'inpainted_square_image': [], 'metrics': [], 'index': None, 'parameters': [], 'thresholds': []}
 
 def update_inpainted_square(img_index, grid_key, square_key, inpainted_square=None, metrics=None, index=None, inpaint_parameters=None, threshold=None):
+    print(img_index, grid_key, square_key)
     if square_key not in st.session_state['all_inpainted_square_images'][img_index][grid_key]:
-        init_inpainted_square(grid_key, square_key)
+        init_inpainted_square(img_index, grid_key, square_key)
     if inpainted_square is not None:
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image'].append(inpainted_square)
     if metrics is not None:
@@ -46,7 +47,7 @@ def update_inpainted_square(img_index, grid_key, square_key, inpainted_square=No
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['parameters'].append(inpaint_parameters)
     if index is not None:
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] = index
-    elif len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][grid_key][square_key]['inpainted_square_image']) == 1:
+    elif len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) == 1:
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] = 0
     if threshold is not None:
         if index is None:

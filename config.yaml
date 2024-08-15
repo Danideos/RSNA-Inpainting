@@ -28,7 +28,7 @@ model:
   attention_resolutions: [8, 16, 32]
   channel_mult: [0.5, 1, 1, 2, 2, 4, 4]
   dropout: 0.0
-  in_channels: 3
+  in_channels: 4
   out_channels: 2
   model_channels: 128
   num_head_channels: -1
@@ -43,13 +43,13 @@ model:
   
   # conditions
   num_classes: 0
-  concat_channels: 2
+  concat_channels: 3
   guidance_drop_prob: 0.1
   missing_class_value: null
 
 hyperparameters:
   img_size: 512
   total_image_seen: 40e6
-  batch_size: 50
+  batch_size: 13
   accumulate_grad_batches: 1
-  num_devices: 3
+  num_devices: 1
