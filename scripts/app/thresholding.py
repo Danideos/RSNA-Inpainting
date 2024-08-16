@@ -3,6 +3,7 @@ from app.utils.state_utils import update_inpainted_square
 
 import streamlit as st
 import numpy as np
+from joblib import Parallel, delayed
 
 
 class ThresholdingPipeline:
@@ -17,8 +18,20 @@ class ThresholdingPipeline:
     pixel_exceed_count = 32
 
     @staticmethod
-    def calculate_series_thresholds():
-        pass
+    def calculate_series_thresholds(series, square_lengths, index):
+        def process_image(img_index):
+            for square_length in square_lengths:
+                for offset in range(3, 4):  # Adjust range as needed
+                    ThresholdingPipeline.calculate_grid_thresholds(
+                        series[img_index],
+                        square_length,
+                        offset,
+                        img_index,
+                        index
+                    )
+        
+        # Parallel processing
+        Parallel(n_jobs=1)(delayed(process_image)(img_index) for img_index in range(len(series)))
 
     @staticmethod
     def calculate_grid_thresholds(image, square_length, offset, img_index, index=None):
@@ -35,6 +48,7 @@ class ThresholdingPipeline:
         metrics_index = -1 if index is None else index
         metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metrics_index]
         if not metrics:
+            print('No metrics found')
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return
     
@@ -44,6 +58,7 @@ class ThresholdingPipeline:
         inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80))
 
         if not ThresholdingPipeline._is_valid_square(original_hist, square_length): 
+            print('Square is not valid')
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return 
 
@@ -61,13 +76,9 @@ class ThresholdingPipeline:
             'is_beyond_threshold': is_deviant,
             'difference_percent': total_difference / np.sum(original_hist) * 100
         }
-
+        print('Threshold:', threshold)
         update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
-  
-    @staticmethod
-    def calculate_series_thresholds():
-        pass
-    
+
     @staticmethod
     def _is_valid_square(original_hist, square_length):
         square_area = square_length ** 2

@@ -129,7 +129,7 @@ def plot_image(tensor, title):
     plt.show()
 
 
-def lambda_transform_with_grid(data, grid, square_length):
+def lambda_transform_with_grid(data, grid):
     img = data['img']
     concat = data['concat']
     
@@ -148,7 +148,7 @@ def lambda_transform_with_grid(data, grid, square_length):
     # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
     # plt.title('Masked Image with Simplex Noise')
     # plt.show()
-    combined = torch.cat([concat, masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
     
     
     data['concat'] = combined / 127.5 - 1

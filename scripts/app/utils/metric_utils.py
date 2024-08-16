@@ -12,6 +12,8 @@ import os
 from PIL import Image
 from pyemd import emd
 import streamlit as st
+from joblib import Parallel, delayed
+
 
 lpips_model = lpips.LPIPS(net='alex')
 
@@ -19,8 +21,6 @@ emd_cost_matrix = np.zeros((80, 80))
 for i in range(80):
     for j in range(80):
         emd_cost_matrix[i, j] = abs(i - j) 
-        # if j <= 20:
-        #     emd_cost_matrix[i, j] /= 5
 
 
 def calculate_lpips(original_array, inpainted_array, min_size=32):
@@ -54,8 +54,8 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     contour_square = contour_array[inpainted_y:inpainted_y + square_length, inpainted_x:inpainted_x + square_length]
 
     # Ensure both images have 3 channels
-    original_array, inpainted_array = ensure_3_channels(original_square, inpainted_square)
-    lpips_value = calculate_lpips(original_array, inpainted_array)
+    # original_array, inpainted_array = ensure_3_channels(original_square, inpainted_square)
+    # lpips_value = calculate_lpips(original_array, inpainted_array)
     # lpips_value = 0 # ignore LPIPS for now
 
     # Apply histogram calculation only to the white pixels in the contour mask
@@ -85,7 +85,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
 
     # Store metrics with square key
     metrics = {
-        "lpips": lpips_value.item(),
+        "lpips": None, # lpips_value.item(),
         "original_histogram_data": original_histogram_values,
         "inpainted_histogram_data": inpainted_histogram_values,
         "histogram_image": None,
@@ -100,8 +100,24 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
 def calculate_grid_metrics(image, image_path, square, offset, img_index, index=None):
     apply_func_to_grid(square[2], offset, image.size[0], calculate_square_metrics, image, image_path, square[2], offset, img_index, index)
 
-def calculate_series_metrics():
-    pass
+def calculate_series_metrics(series, series_image_paths, square_lengths):
+    def process_image(img_index):
+        for square_length in square_lengths:
+            for offset in range(3,4):  # Adjust range as needed
+                apply_func_to_grid(
+                    square_length,
+                    offset,
+                    series[img_index].size[0],
+                    calculate_square_metrics,
+                    series[img_index],
+                    series_image_paths[img_index],
+                    square_length,
+                    offset,
+                    img_index
+                )
+    
+    # Parallel processing
+    Parallel(n_jobs=1)(delayed(process_image)(img_index) for img_index in range(len(series)))
 
 def navigate_metrics(img_index, grid_key, square_key, direction):
     metrics_amount = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'])

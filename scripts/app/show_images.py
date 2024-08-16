@@ -8,13 +8,14 @@ from io import BytesIO
 import base64
 
 
-def show_image(image, image_path, square, mask, offset, img_index, _middle_col, _right_col):
+def show_image(image, image_path, square, mask, offset, img_index, _left_col, _middle_col, _right_col):
     grid_key, square_key = get_keys(square, offset)
     is_inpainted = is_square_inpainted(img_index, grid_key, square_key)
     index = get_current_index(img_index, square, offset)
 
     value = display_image(square, offset, image, image_path, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col)
     display_metrics(img_index, grid_key, square_key, index, is_inpainted, _right_col)
+    # display_series_statistics()
     
     if value:
         set_x_and_y(value, image.size[0], square[2])

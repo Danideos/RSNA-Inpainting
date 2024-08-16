@@ -2,7 +2,7 @@
 import streamlit as st
 from app.thresholding import ThresholdingPipeline
 from app.utils.general_utils import get_current_index
-from app.utils.metric_utils import calculate_grid_metrics
+from app.utils.metric_utils import calculate_grid_metrics, calculate_series_metrics
 
 
 def get_square_and_mask(square_length, x_index, y_index, offset_option):
@@ -32,7 +32,7 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
             image, image_path = series[img_index], series_image_paths[img_index]
 
         with st.expander("Inpainting Parameters"):
-            start_denoise_step = st.slider('Select Start Denoise Step:', 1, 100, 100)
+            start_denoise_step = st.slider('Select Start Denoise Step:', 1, 100, 20)
             resampling_steps = st.slider('Select Resampling Steps:', 1, 10, 1)
             jump_length = st.slider('Select Jump Length:', 1, 10, 1)
             inpaint_parameters = (start_denoise_step, resampling_steps, jump_length)
@@ -59,16 +59,23 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
                 pixel_exceed_count=pixel_exceed_count
             )
             
-            if st.button('Recalculate Thresholds'):
-                dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
-                square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
-                index = get_current_index(img_index, square, offset_option)
+            dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
+            square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
+            index = get_current_index(img_index, square, offset_option)
+            
+            if st.button('Recalculate Grid Thresholds'):
                 ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, img_index, index)
-            if st.button('Recalculate Metrics'):
-                dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2
-                square = (x_index * square_length + dx, y_index * square_length + dy, square_length)
-                index = get_current_index(img_index, square, offset_option)
+
+            if st.button('Recalculate Grid Metrics'):
                 calculate_grid_metrics(image, image_path, square, offset_option, index)
                 ThresholdingPipeline.calculate_grid_thresholds(image, square_length, offset_option, img_index, index)
+
+            if st.button('Recalculate Series Thresholds'):
+                ThresholdingPipeline.calculate_series_thresholds(series, square_lengths, index)
+
+            if st.button('Recalculate Series Metrics'):
+                calculate_series_metrics(series, series_image_paths, square_lengths)
+                ThresholdingPipeline.calculate_series_thresholds(series, square_lengths, index)
+
             
     return square_length, offset_option, x_index, y_index, img_index, inpaint_parameters, image, image_path

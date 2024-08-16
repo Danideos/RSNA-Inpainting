@@ -12,13 +12,6 @@ load_dotenv(dotenv_path)
 
 
 class DataManager:
-    def __init__(self):
-        self.default_image = os.getenv('UNHEALTHY_PATH')
-
-    def ask_for_image_path(self):
-        image_path = st.text_input('Enter the path to your image:', self.default_image)
-        return image_path
-
     @staticmethod
     @st.cache_data
     def load_image(path, image_size=256):

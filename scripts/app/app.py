@@ -1,12 +1,15 @@
 import sys
 import os
 import importlib
+from dotenv import load_dotenv
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.insert(0, project_root)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.insert(0, project_root)
 os.environ['TORCH_USE_CUDA_DSA'] = '1'
+
+load_dotenv(override=True)
 
 import streamlit as st
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
@@ -49,9 +52,8 @@ def display_image_selector():
     left, middle, right = st.columns([1, 2, 2])
 
     img_size = 256
-    square_lengths = [64, 32, 16, 8]
+    square_lengths = [16]
 
-    data_manager = DataManager() 
     with middle:
         st.title('Inpainting Thresholding Tool')
         reload_modules()
@@ -59,9 +61,7 @@ def display_image_selector():
     # Initialize streamlit states
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
-    # image_path = data_manager.ask_for_image_path()
-    # image = data_manager.load_image(image_path, img_size)
-    series_path = '/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train/ID_0ac08adb64/bet_png'
+    series_path = os.getenv("SERIES_PATH")
     series, series_image_paths = DataManager.load_series(series_path)
 
     # Handle input from slider params
@@ -75,7 +75,7 @@ def display_image_selector():
     handle_datamanagement_toggle_buttons()
     
     # Show the image
-    show_image(image, image_path, square, grid_mask, offset_option, img_index, middle, right)
+    show_image(image, image_path, square, grid_mask, offset_option, img_index, left, middle, right)
 
 if __name__ == "__main__":
     display_image_selector()

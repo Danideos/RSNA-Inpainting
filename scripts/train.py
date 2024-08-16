@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -47,7 +47,7 @@ def train(input_dir, mask_dir=None):
     #     val_batch_size=max(1, BATCH_SIZE // 2),
     #     with_condition=True,
     # )
-    # model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/epoch=0-step=30000-val_loss=0.0015.ckpt"
+    model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
@@ -58,18 +58,18 @@ def train(input_dir, mask_dir=None):
         val_batch_size=max(1, BATCH_SIZE // 2),
         with_condition=True,
     )
-    # model.load_ckpt(model_path, ema=True)
+    model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
         max_steps=TRAIN_ITERATIONS,
-        val_check_interval=1, # Epochs, not steps now, for DDP protocol
+        val_check_interval=5000, # Epochs, not steps now, for DDP protocol
         root_directory="./outputs/",
         precision="16-mixed",
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="edge_map2+grid_masks_2A100",
+        logger_instance="edge_map2+grid_masks_4090",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
