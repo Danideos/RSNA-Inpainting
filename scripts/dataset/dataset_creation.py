@@ -10,18 +10,22 @@ from tqdm import tqdm
 # MASKS_AND_NOISE = generate_masks_and_noise(amount=60000)
 
 
-def create_data_dicts(data_dir, mask_dir, edge_dir):
+def create_data_dicts(data_dir, mask_dir, edge_dir, left_dir, right_dir):
     png_files = sorted(glob.glob(os.path.join(data_dir, "*.png")))
     mask_files = set(glob.glob(os.path.join(mask_dir, "*.png")))
     edge_files = set(glob.glob(os.path.join(edge_dir, "*.png")))
+    left_files = set(glob.glob(os.path.join(left_dir, "*.png")))
+    right_files = set(glob.glob(os.path.join(right_dir, "*.png")))
 
     data_dicts = []
     for img_file in tqdm(png_files, desc="Creating data dict"):
         base_name = os.path.basename(img_file)
         mask_file = os.path.join(mask_dir, base_name)
         edge_file = os.path.join(edge_dir, base_name)
-        if mask_file in mask_files and edge_file in edge_files:
-            data_dicts.append({"img": img_file, "concat": [mask_file, edge_file]})
+        left_file = os.path.join(left_dir, base_name)
+        right_file = os.path.join(right_dir, base_name)
+        if mask_file in mask_files and edge_file in edge_files and left_file in left_files and right_file in right_files:
+            data_dicts.append({"img": img_file, "concat": [mask_file, left_file, right_file]})
     
     return data_dicts
 
@@ -38,8 +42,8 @@ def create_transforms(img_size, resize_size):
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])
 
-def create_dataset(data_dir, mask_dir, edge_dir, img_size, resize_size):
-    data_dicts = create_data_dicts(data_dir, mask_dir, edge_dir)
+def create_dataset(data_dir, mask_dir, edge_dir, left_dir, right_dir, img_size, resize_size):
+    data_dicts = create_data_dicts(data_dir, mask_dir, edge_dir, left_dir, right_dir)
     train_data_dicts, val_data_dicts = train_test_split(data_dicts, test_size=0.05, random_state=42)
 
     transforms = create_transforms(img_size, resize_size)

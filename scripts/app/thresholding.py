@@ -48,7 +48,6 @@ class ThresholdingPipeline:
         metrics_index = -1 if index is None else index
         metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metrics_index]
         if not metrics:
-            print('No metrics found')
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return
     
@@ -58,7 +57,6 @@ class ThresholdingPipeline:
         inpainted_hist, _ = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80))
 
         if not ThresholdingPipeline._is_valid_square(original_hist, square_length): 
-            print('Square is not valid')
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return 
 

@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -32,7 +32,9 @@ def train(input_dir, mask_dir=None):
     data_dir = os.path.join(input_dir, "bet_png")
     mask_dir = os.path.join(input_dir, "mask_png")
     edge_dir = os.path.join(input_dir, "edge_png")
-    train_ds, val_ds = create_dataset(data_dir, mask_dir, edge_dir, IMG_SIZE, RESIZE_SIZE)
+    left_dir = os.path.join(input_dir, "left_png")
+    right_dir = os.path.join(input_dir, "right_png")
+    train_ds, val_ds = create_dataset(data_dir, mask_dir, edge_dir, left_dir, right_dir, IMG_SIZE, RESIZE_SIZE)
     train_sampler, val_sampler = get_datasamplers(train_ds, val_ds, TOTAL_IMAGE_SEEN)
     print(f"train dataset size: {len(train_ds)}")
     torch.cuda.empty_cache()
@@ -47,7 +49,7 @@ def train(input_dir, mask_dir=None):
     #     val_batch_size=max(1, BATCH_SIZE // 2),
     #     with_condition=True,
     # )
-    model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
+    # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
@@ -58,7 +60,7 @@ def train(input_dir, mask_dir=None):
         val_batch_size=max(1, BATCH_SIZE // 2),
         with_condition=True,
     )
-    model.load_ckpt(model_path, ema=True)
+    # model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
@@ -69,7 +71,7 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="edge_map2+grid_masks_4090",
+        logger_instance="2.5D+grid_masks_4090",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
