@@ -115,7 +115,6 @@ dependencies:
       - astunparse==1.6.3
       - async-timeout==4.0.3
       - attrs==23.2.0
-      - bkh-pytorch-utils==0.9.3
       - blinker==1.8.2
       - blobfile==2.1.1
       - cachetools==5.4.0
@@ -246,11 +245,8 @@ dependencies:
       - timm==1.0.7
       - toml==0.10.2
       - toolz==0.12.1
-      - torch==2.3.1+cu118
-      - torchaudio==2.3.1+cu118
       - torchextractor==0.3.0
       - torchmetrics==1.4.0.post0
-      - torchvision==0.18.1+cu118
       - tqdm==4.66.4
       - triton==2.3.1
       - typing-extensions==4.9.0
