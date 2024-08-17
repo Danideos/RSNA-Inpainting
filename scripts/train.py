@@ -50,6 +50,7 @@ def train(input_dir, mask_dir=None):
     #     with_condition=True,
     # )
     # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
+    # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
@@ -61,6 +62,7 @@ def train(input_dir, mask_dir=None):
         with_condition=True,
     )
     # model.load_ckpt(model_path, ema=True)
+    # model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
@@ -71,7 +73,7 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="2.5D+grid_masks_4090",
+        logger_instance="edge_map3+grid_masks_4090",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
