@@ -18,10 +18,10 @@ class ThresholdingPipeline:
     pixel_exceed_count = 32
 
     @staticmethod
-    def calculate_series_thresholds(series, square_lengths, index):
+    def calculate_series_thresholds(series, square_lengths, index=None):
         def process_image(img_index):
             for square_length in square_lengths:
-                for offset in range(3, 4):  # Adjust range as needed
+                for offset in range(4):  # Adjust range as needed
                     ThresholdingPipeline.calculate_grid_thresholds(
                         series[img_index],
                         square_length,
@@ -45,8 +45,8 @@ class ThresholdingPipeline:
             'difference_percent': None
         }
 
-        metrics_index = -1 if index is None else index
-        metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metrics_index]
+        metric_index = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) - 1 if index is None else index
+        metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metric_index]
         if not metrics:
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return
@@ -74,7 +74,6 @@ class ThresholdingPipeline:
             'is_beyond_threshold': is_deviant,
             'difference_percent': total_difference / np.sum(original_hist) * 100
         }
-        print('Threshold:', threshold)
         update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
 
     @staticmethod

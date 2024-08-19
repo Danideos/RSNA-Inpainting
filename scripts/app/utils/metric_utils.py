@@ -15,33 +15,34 @@ import streamlit as st
 from joblib import Parallel, delayed
 
 
-lpips_model = lpips.LPIPS(net='alex')
+# lpips_model = lpips.LPIPS(net='alex')
 
 emd_cost_matrix = np.zeros((80, 80))
-for i in range(80):
-    for j in range(80):
+for i in range(1,80-1):
+    for j in range(1,80-1):
         emd_cost_matrix[i, j] = abs(i - j) 
+        
 
 
-def calculate_lpips(original_array, inpainted_array, min_size=32):
-    min_size = 32
-    if original_array.shape[0] < min_size or original_array.shape[1] < min_size:
-        original_array_lpips = np.array(Image.fromarray(original_array).resize((min_size, min_size), Image.BICUBIC))
-        inpainted_array_lpips = np.array(Image.fromarray(inpainted_array).resize((min_size, min_size), Image.BICUBIC))
-    else:
-        original_array_lpips = original_array
-        inpainted_array_lpips = inpainted_array
+# def calculate_lpips(original_array, inpainted_array, min_size=32):
+#     min_size = 32
+#     if original_array.shape[0] < min_size or original_array.shape[1] < min_size:
+#         original_array_lpips = np.array(Image.fromarray(original_array).resize((min_size, min_size), Image.BICUBIC))
+#         inpainted_array_lpips = np.array(Image.fromarray(inpainted_array).resize((min_size, min_size), Image.BICUBIC))
+#     else:
+#         original_array_lpips = original_array
+#         inpainted_array_lpips = inpainted_array
 
-    original_tensor_lpips = torch.tensor(original_array_lpips.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
-    inpainted_tensor_lpips = torch.tensor(inpainted_array_lpips.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
+#     original_tensor_lpips = torch.tensor(original_array_lpips.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
+#     inpainted_tensor_lpips = torch.tensor(inpainted_array_lpips.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
 
-    lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
-    return lpips_value
+#     lpips_value = lpips_model(original_tensor_lpips, inpainted_tensor_lpips)
+#     return lpips_value
 
 def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square_length, offset, img_index, index=None):
     square = (inpainted_x, inpainted_y, square_length)
     grid_key, square_key = get_keys(square, offset)
-    metric_index = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) - 1
+    metric_index = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) - 1 if index is None else index
 
     inpainted_square = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image'][metric_index]
     original_square = image.crop((inpainted_x, inpainted_y, inpainted_x + square_length, inpainted_y + square_length))
@@ -78,7 +79,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     
     # Calculate EMD
     # emd_value = emd(original_histogram_values, inpainted_histogram_values, emd_distance_matrices[square_length], extra_mass_penalty=emd_alpha[square_length])
-    emd_value = emd(original_hist, inpainted_hist, emd_cost_matrix) / np.sum(original_hist)
+    emd_value = emd(original_hist[1:-1], inpainted_hist[1:-1], emd_cost_matrix) / np.sum(original_hist[1:-1])
 
     # Calculate additional metrics as differences
     std_dev_diff = np.std(original_histogram_values) - np.std(inpainted_histogram_values)
@@ -103,7 +104,7 @@ def calculate_grid_metrics(image, image_path, square, offset, img_index, index=N
 def calculate_series_metrics(series, series_image_paths, square_lengths):
     def process_image(img_index):
         for square_length in square_lengths:
-            for offset in range(3,4):  # Adjust range as needed
+            for offset in range(4):  # Adjust range as needed
                 apply_func_to_grid(
                     square_length,
                     offset,

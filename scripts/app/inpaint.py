@@ -27,7 +27,7 @@ def create_args(image_path, square_length, inpaint_parameters, num_images=1):
         square_length=square_length,
         divisibility_factor=3,
         resample_steps=inpaint_parameters[1],
-        inference_protocol="DDIM100",
+        inference_protocol="DDIM50",
         average=1,
         batch_size=1,
         jump_length=inpaint_parameters[2],
@@ -55,11 +55,20 @@ def inpaint_grid(image_path, img_size, square, offset, img_index, inpaint_parame
     st.session_state['show_inpainted_square'] = True
 
 def inpaint_series(series, series_image_paths, square_lengths, img_index, img_size, inpaint_parameters=None):
+    import torch
+
+    if torch.cuda.is_available():
+        device_id = torch.cuda.current_device()
+        print(f"Using GPU: {torch.cuda.get_device_name(device_id)} (Device ID: {device_id})")
+        print(f"Memory Allocated: {torch.cuda.memory_allocated(device_id) / 1024 ** 3:.2f} GB")
+        print(f"Memory Cached: {torch.cuda.memory_reserved(device_id) / 1024 ** 3:.2f} GB")
+    else:
+        print("No GPU available, using CPU.")
     batch_size = 100
     batch_images, batch_paths, batch_masks, batch_params = [], [], [], []
     for img_index in range(len(series)):
         for square_length in square_lengths:
-            for offset in range(3,4):
+            for offset in range(4):
                 for i in range(3):
                     for j in range(3):
                         image, image_path = series[img_index], series_image_paths[img_index]
@@ -77,8 +86,8 @@ def inpaint_series(series, series_image_paths, square_lengths, img_index, img_si
 
 def inpaint_batch(batch_images, batch_paths, batch_masks, batch_params, img_index, img_size, inpaint_parameters):
     concat_paths = [get_contour_path(image_path) for image_path in batch_paths]
-    contour_paths, edge_paths = [path[0] for path in concat_paths], [path[1] for path in concat_paths]
-    batch_inpainted_squares = get_inpainted_batch_squares(batch_images, batch_paths, contour_paths, edge_paths, batch_masks, batch_params, img_size, inpaint_parameters)
+    contour_paths, edge_paths, left_paths, right_paths = [path[0] for path in concat_paths], [path[1] for path in concat_paths], [path[2] for path in concat_paths], [path[3] for path in concat_paths]
+    batch_inpainted_squares = get_inpainted_batch_squares(batch_images, batch_paths, contour_paths, edge_paths, left_paths, right_paths, batch_masks, batch_params, img_size, inpaint_parameters)
 
     update_inpainted_squares(batch_inpainted_squares, inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
@@ -126,10 +135,10 @@ def get_inpainted_image_squares(image_path, contour_path, edge_path, img_index, 
 
     return inpainted_mask_squares
 
-def get_inpainted_batch_squares(batch_images, batch_paths, contour_paths, edge_paths, batch_masks, batch_params, img_size, inpaint_parameters):
+def get_inpainted_batch_squares(batch_images, batch_paths, contour_paths, edge_paths, left_paths, right_paths, batch_masks, batch_params, img_size, inpaint_parameters):
     args = create_args(batch_paths[0], None, inpaint_parameters, num_images=len(batch_images))
     grid_masks = torch.stack([torch.tensor(mask).transpose(1, 0) for mask in batch_masks], dim=0)
-    img_tensors, concat_tensors, img_ids = preprocess_images(batch_paths, contour_paths, edge_paths, args, img_size=512, resize_size=img_size, grid=grid_masks)
+    img_tensors, concat_tensors, img_ids = preprocess_images(batch_paths, contour_paths, edge_paths, left_paths, right_paths, args, img_size=512, resize_size=img_size, grid=grid_masks)
     grid_masks = grid_masks.unsqueeze(1).float()
 
     inpainted_imgs = inpaint_images(model, img_tensors, concat_tensors, grid_masks, args, noise_shape=(1, img_size, img_size), device=device)

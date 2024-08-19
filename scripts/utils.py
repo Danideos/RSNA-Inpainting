@@ -148,7 +148,7 @@ def lambda_transform_with_grid(data, grid):
     # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
     # plt.title('Masked Image with Simplex Noise')
     # plt.show()
-    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[2].unsqueeze(0), concat[3].unsqueeze(0), masked_img], dim=0)
     
     
     data['concat'] = combined / 127.5 - 1
@@ -165,14 +165,14 @@ def lambda_transform(data):
     # random_mask = random.randint(0, len(masks_and_noise) - 1)
     # mask, noise = masks_and_noise[random_mask]
     mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
-    img_tensor = torch.tensor(img, dtype=torch.float)
+    img_tensor = img.clone().detach()
 
     # simplex_img = img + noise * 255
     # simplex_img = np.clip(simplex_img, 0, 255)
     # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
     
     masked_img = img_tensor * (1 - mask_tensor) # + simplex_tensor * mask_tensor
-    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), concat[2].unsqueeze(0), masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
     
     data['concat'] = combined / 127.5 - 1
     data['img'] = img / 127.5 - 1

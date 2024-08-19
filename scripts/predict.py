@@ -26,7 +26,7 @@ class LambdaTransformWithOptionalGrid(mt.Transform):
         data = self.func(data, current_grid)
         return data
 
-def preprocess_images(png_paths, mask_paths, edge_paths, args, img_size=512, resize_size=256, grid=None):
+def preprocess_images(png_paths, mask_paths, edge_paths, left_paths, right_paths, args, img_size=512, resize_size=256, grid=None):
     device = 'cuda' if not args.use_cpu and torch.cuda.is_available() else 'cpu'
     data_transforms = mt.Compose([
         mt.LoadImageD(keys=["img", "concat"]),
@@ -37,7 +37,7 @@ def preprocess_images(png_paths, mask_paths, edge_paths, args, img_size=512, res
         # mt.ScaleIntensityD(keys=["img", "concat"], minv=-1, maxv=1),
         mt.ToTensorD(keys=["img", "concat"], dtype=torch.float, track_meta=False),
     ])
-    png_imgs = [{"img": png_paths[i], "concat": (mask_paths[i], edge_paths[i]), "index": i} for i in range(args.num_images)]
+    png_imgs = [{"img": png_paths[i], "concat": (mask_paths[i], edge_paths[i], left_paths[i], right_paths[i]), "index": i} for i in range(args.num_images)]
     img_ids = [os.path.basename(png_path).split(".")[0] for png_path in png_paths[:args.num_images]]
     transformed_imgs = data_transforms(png_imgs)
     img_tensors = torch.stack([img_dict["img"] for img_dict in transformed_imgs], dim=0).to(device)
@@ -45,7 +45,7 @@ def preprocess_images(png_paths, mask_paths, edge_paths, args, img_size=512, res
     return img_tensors, mask_tensors, img_ids
 
 def inpaint_images(model, img_tensors, mask_tensors, masks, args, noise_shape, device="cpu"):
-    batch_size = 100
+    batch_size = 500
     inpainted_imgs = []
     for i in range(0, len(img_tensors), batch_size):
         max_index = min(len(img_tensors), i + batch_size)

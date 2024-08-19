@@ -7,7 +7,10 @@ def get_contour_path(image_path):
     file_name = os.path.basename(image_path)
     contour_path = "/".join(image_path.split("/")[:-2]) + "/mask_png/" + file_name
     edge_path = "/".join(image_path.split("/")[:-2]) + "/edge_png/" + file_name
-    return (contour_path, edge_path)
+    left_path = "/".join(image_path.split("/")[:-2]) + "/left_png/" + file_name
+    right_path = "/".join(image_path.split("/")[:-2]) + "/right_png/" + file_name
+    #, left_paths, right_paths
+    return (contour_path, edge_path, left_path, right_path)
 
 def get_keys(square, offset):
     x, y, square_length = square

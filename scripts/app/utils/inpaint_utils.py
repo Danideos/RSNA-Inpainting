@@ -1,5 +1,6 @@
 from inpaint import inpaint_square, inpaint_grid, inpaint_series
 from app.utils.metric_utils import calculate_square_metrics, calculate_grid_metrics, calculate_series_metrics
+from app.utils.general_utils import get_current_index
 from scripts.app.data_manager import DataManager
 
 import streamlit as st

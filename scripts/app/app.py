@@ -30,7 +30,7 @@ import app.show_images
 import app.data_manager
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 
 def reload_modules():
@@ -42,6 +42,7 @@ def reload_modules():
         importlib.reload(app.utils.general_utils)
         importlib.reload(app.utils.inpaint_utils)
         importlib.reload(app.utils.metric_utils)
+        importlib.reload(app.inpaint)
         importlib.reload(app.show_images)
         importlib.reload(app.mask)
         st.success("Module reloaded successfully")
@@ -52,7 +53,7 @@ def display_image_selector():
     left, middle, right = st.columns([1, 2, 2])
 
     img_size = 256
-    square_lengths = [16]
+    square_lengths = [8, 16, 32, 64]
 
     with middle:
         st.title('Inpainting Thresholding Tool')
@@ -62,6 +63,7 @@ def display_image_selector():
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
     series_path = os.getenv("SERIES_PATH")
+    print(series_path)
     series, series_image_paths = DataManager.load_series(series_path)
 
     # Handle input from slider params

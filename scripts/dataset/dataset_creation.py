@@ -25,7 +25,7 @@ def create_data_dicts(data_dir, mask_dir, edge_dir, left_dir, right_dir):
         left_file = os.path.join(left_dir, base_name)
         right_file = os.path.join(right_dir, base_name)
         if mask_file in mask_files and edge_file in edge_files and left_file in left_files and right_file in right_files:
-            data_dicts.append({"img": img_file, "concat": [mask_file, left_file, right_file]})
+            data_dicts.append({"img": img_file, "concat": [mask_file, edge_file, left_file, right_file]})
     
     return data_dicts
 

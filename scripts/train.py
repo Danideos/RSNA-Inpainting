@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -67,13 +67,13 @@ def train(input_dir, mask_dir=None):
 
     trainer = Trainer(
         max_steps=TRAIN_ITERATIONS,
-        val_check_interval=5000, # Epochs, not steps now, for DDP protocol
+        val_check_interval=1, # Epochs, not steps now, for DDP protocol
         root_directory="./outputs/",
         precision="16-mixed",
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="2.5D+edge_map3+grid_masks_A2000",
+        logger_instance="EM(G5,T2)+GM_2A100",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
