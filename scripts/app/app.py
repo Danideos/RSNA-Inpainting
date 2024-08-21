@@ -30,7 +30,7 @@ import app.show_images
 import app.data_manager
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 
 def reload_modules():
@@ -42,7 +42,6 @@ def reload_modules():
         importlib.reload(app.utils.general_utils)
         importlib.reload(app.utils.inpaint_utils)
         importlib.reload(app.utils.metric_utils)
-        importlib.reload(app.inpaint)
         importlib.reload(app.show_images)
         importlib.reload(app.mask)
         st.success("Module reloaded successfully")
@@ -63,7 +62,6 @@ def display_image_selector():
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
     series_path = os.getenv("SERIES_PATH")
-    print(series_path)
     series, series_image_paths = DataManager.load_series(series_path)
 
     # Handle input from slider params
@@ -77,7 +75,10 @@ def display_image_selector():
     handle_datamanagement_toggle_buttons()
     
     # Show the image
-    show_image(image, image_path, square, grid_mask, offset_option, img_index, left, middle, right)
+    show_image(series, series_image_paths, 
+               square_lengths, image, image_path, 
+               square, grid_mask, offset_option, img_index, 
+               _left_col=left, _middle_col=middle, _right_col=right)
 
 if __name__ == "__main__":
     display_image_selector()

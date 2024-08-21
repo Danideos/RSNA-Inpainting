@@ -27,7 +27,7 @@ class DataManager:
     def load_series(series_path, image_size=256):
         series = []
         series_image_paths = []
-        for file in sorted(os.listdir(series_path)):
+        for file in sorted(os.listdir(series_path), key=lambda x: int(x.split("_")[0][1:])):
             if file.endswith(".png"):
                 image = Image.open(os.path.join(series_path, file))
                 image = image.resize((image_size, image_size), Image.Resampling.LANCZOS)

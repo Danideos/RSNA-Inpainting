@@ -46,6 +46,7 @@ class ThresholdingPipeline:
         }
 
         metric_index = len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) - 1 if index is None else index
+        
         metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][metric_index]
         if not metrics:
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
@@ -60,21 +61,43 @@ class ThresholdingPipeline:
             update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
             return 
 
+        beyond_threshold, threshold_sum = ThresholdingPipeline._threshold_calc(metrics, original_hist, inpainted_hist, original_histogram_values, inpainted_histogram_values)
+        is_deviant = beyond_threshold >= 5 and threshold_sum >= 6.5
+        threshold = {
+            'is_beyond_threshold': is_deviant,
+            'difference_percent': f"{beyond_threshold}, {threshold_sum}"
+        }
+        update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
+
+    @staticmethod
+    def _threshold_calc(metrics, original_hist, inpainted_hist, original_histogram_values, inpainted_histogram_values):
         boundary_index = ThresholdingPipeline._get_boundary_index(inpainted_hist)
         total_difference = ThresholdingPipeline._get_total_difference(boundary_index, original_hist, inpainted_hist)
         pixel_exceed_count = np.sum(np.abs(original_histogram_values - inpainted_histogram_values) > ThresholdingPipeline.pixel_dist)
 
-        is_deviant = (metrics['std_dev_diff'] >= ThresholdingPipeline.std_dev_diff_amount 
-                      and metrics['emd'] >= ThresholdingPipeline.emd 
-                      and metrics['mse'] >= ThresholdingPipeline.mse 
-                      and pixel_exceed_count >= ThresholdingPipeline.pixel_exceed_count
-                      and total_difference > ThresholdingPipeline.difference_percent / 100 * np.sum(original_hist))
-
-        threshold = {
-            'is_beyond_threshold': is_deviant,
-            'difference_percent': total_difference / np.sum(original_hist) * 100
-        }
-        update_inpainted_square(img_index, grid_key, square_key, threshold=threshold, index=index)
+     
+        beyond_threshold = (int(metrics['std_dev_diff'] >= ThresholdingPipeline.std_dev_diff_amount )
+                      + int(metrics['emd'] >= ThresholdingPipeline.emd )
+                      + int(metrics['mse'] >= ThresholdingPipeline.mse )
+                      + int(pixel_exceed_count >= ThresholdingPipeline.pixel_exceed_count)
+                      + int(total_difference >= ThresholdingPipeline.difference_percent / 100 * np.sum(original_hist))
+                      + int(metrics['mean_diff'] >= 3))
+        
+        if (ThresholdingPipeline.std_dev_diff_amount != 0
+                and ThresholdingPipeline.emd != 0
+                and ThresholdingPipeline.mse != 0
+                and ThresholdingPipeline.difference_percent != 0
+                and ThresholdingPipeline.pixel_exceed_count != 0):
+            threshold_sum = (min(metrics['std_dev_diff'] / ThresholdingPipeline.std_dev_diff_amount, 2)
+                        + min(metrics['emd'] / ThresholdingPipeline.emd, 2)
+                        + min(metrics['mse'] / ThresholdingPipeline.mse, 2)
+                        + min(pixel_exceed_count / ThresholdingPipeline.pixel_exceed_count, 2)
+                        + min(total_difference / ThresholdingPipeline.difference_percent / 100 * np.sum(original_hist), 2)
+                        + min(metrics['mean_diff'] / 3, 2))
+        else:
+            threshold_sum = 100
+        
+        return beyond_threshold, threshold_sum
 
     @staticmethod
     def _is_valid_square(original_hist, square_length):

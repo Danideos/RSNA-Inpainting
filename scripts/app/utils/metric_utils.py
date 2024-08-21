@@ -17,9 +17,9 @@ from joblib import Parallel, delayed
 
 # lpips_model = lpips.LPIPS(net='alex')
 
-emd_cost_matrix = np.zeros((80, 80))
-for i in range(1,80-1):
-    for j in range(1,80-1):
+emd_cost_matrix = np.zeros((78, 78))
+for i in range(0,80-2):
+    for j in range(0,80-2):
         emd_cost_matrix[i, j] = abs(i - j) 
         
 
@@ -69,7 +69,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     inpainted_hist = np.histogram(inpainted_histogram_values, bins=80, range=(0, 80), density=False)[0].astype(np.float64)
 
     if original_histogram_values.size == 0 or inpainted_histogram_values.size == 0:
-        update_inpainted_square(img_index, grid_key, square_key, metrics=False)
+        update_inpainted_square(img_index, grid_key, square_key, metrics=False, index=index)
         return
     
     # Calculate difference in means
@@ -84,6 +84,9 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
     # Calculate additional metrics as differences
     std_dev_diff = np.std(original_histogram_values) - np.std(inpainted_histogram_values)
 
+    mse = np.mean((original_histogram_values[original_histogram_values < 80] - inpainted_histogram_values[original_histogram_values < 80]) ** 2) if np.any(original_histogram_values < 80) else 0
+
+
     # Store metrics with square key
     metrics = {
         "lpips": None, # lpips_value.item(),
@@ -93,7 +96,7 @@ def calculate_square_metrics(inpainted_x, inpainted_y, image, image_path, square
         "mean_diff": mean_diff,
         "emd": emd_value,
         "std_dev_diff": std_dev_diff,
-        "mse": np.mean((original_histogram_values - inpainted_histogram_values) ** 2)
+        "mse": mse
     }
 
     update_inpainted_square(img_index, grid_key, square_key, metrics=metrics, index=index)

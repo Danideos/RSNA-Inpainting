@@ -27,11 +27,11 @@ def create_args(image_path, square_length, inpaint_parameters, num_images=1):
         square_length=square_length,
         divisibility_factor=3,
         resample_steps=inpaint_parameters[1],
-        inference_protocol="DDIM50",
+        inference_protocol="DDIM20",
         average=1,
         batch_size=1,
         jump_length=inpaint_parameters[2],
-        start_denoise_step=inpaint_parameters[0],
+        start_denoise_step=None,
         preprocessed_dir=os.path.dirname(image_path),
         output_dir=os.path.dirname(image_path)
     )

@@ -73,7 +73,7 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="EM(G5,T2)+GM_2A100",
+        logger_instance="EM(FE,G5,T1.5)_2A100",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 
