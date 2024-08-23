@@ -14,13 +14,10 @@ load_dotenv(override=True)
 import streamlit as st
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-if 'is_initialized' not in st.session_state:
-    st.session_state.is_initialized = False
-
 from scripts.app.data_manager import DataManager, handle_datamanagement_toggle_buttons
 from app.show_images import show_image
 from app.utils.slider_utils import get_slider_parameters, get_square_and_mask
-from app.utils.state_utils import initialize_states, handle_visibility_toggle_buttons
+from app.utils.state_utils import initialize_states, handle_visibility_toggle_buttons, reset_session_state
 from app.utils.metric_utils import handle_metric_toggle_buttons
 from app.utils.inpaint_utils import handle_inpaint_toggle_buttons
 import app.utils.general_utils
@@ -59,7 +56,7 @@ def display_image_selector():
         reload_modules()
 
     # Initialize streamlit states
-    initialize_states(square_lengths=square_lengths, img_size=img_size)
+    initialize_states(square_lengths=square_lengths)
 
     series_path = st.text_input('Enter series path:', value="")
     series_path = os.getenv("SERIES_PATH") if len(series_path) == 0 else series_path
@@ -68,12 +65,12 @@ def display_image_selector():
     # Handle input from slider params
     square_size, offset_option, x_index, y_index, img_index, inpaint_parameters, image, image_path = get_slider_parameters(square_lengths, img_size, series, series_image_paths, middle)
     square, grid_mask = get_square_and_mask(square_size, x_index, y_index, offset_option)  
-
     # Handle toggle buttons
     handle_visibility_toggle_buttons()
     handle_inpaint_toggle_buttons(series, series_image_paths, square_lengths, square, grid_mask, img_size, inpaint_parameters, offset_option, img_index)
     handle_metric_toggle_buttons(square, offset_option, img_index)
     handle_datamanagement_toggle_buttons()
+        
     
     # Show the image
     show_image(series, series_image_paths, 

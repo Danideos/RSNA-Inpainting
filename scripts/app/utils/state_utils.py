@@ -3,7 +3,7 @@ import streamlit as st
 from app.mask import create_masks
 
 @st.cache_data
-def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
+def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256, series_id=None):
     if 'masks' not in st.session_state:
         st.session_state['masks'] = create_masks(img_size, square_lengths)
     if 'grid_overlays' not in st.session_state:
@@ -26,6 +26,16 @@ def initialize_states(square_lengths=[48, 32, 16, 8], img_size=256):
         st.session_state['y_index'] = 0
     if 'img_index' not in st.session_state:
         st.session_state['img_index'] = 0
+
+def reset_session_state(square_lengths=[48, 32, 16, 8], img_size=256, series_id=None):
+    st.session_state.clear()
+    initialize_states(square_lengths, img_size, series_id)
+    if 'show_selection' not in st.session_state:
+        st.session_state['show_selection'] = True
+    if 'show_correct_grid' not in st.session_state:
+        st.session_state['show_correct_grid'] = False
+    if 'show_thresholds' not in st.session_state:
+        st.session_state['show_thresholds'] = False
 
 def init_inpainted_square(img_index, grid_key, square_key):
     if square_key not in st.session_state['all_inpainted_square_images'][img_index][grid_key]:
