@@ -8,5 +8,6 @@ scripts/CT_BET_GPU/*
 scripts/PytorchUtils/*
 scripts/PytorchUtils
 scripts/mediffusion/*
+scripts/app/outputs/*
 **/__pycache__/*
 __pycache__/

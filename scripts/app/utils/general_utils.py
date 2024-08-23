@@ -30,9 +30,6 @@ def set_x_and_y(value, img_size, square_length):
     x, y = x * (img_size / value['width']), y * (img_size / value['height'])
     st.session_state['x_index'], st.session_state['y_index'] = int(x // square_length), int(y // square_length)
 
-def get_inpainted_square_index(grid_key, square_key):
-    return st.session_state['all_inpainted_square_images'][grid_key][square_key]['index']
-
 def is_square_inpainted(img_index, grid_key, square_key):
     return (square_key in st.session_state['all_inpainted_square_images'][img_index][grid_key] 
             and st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] is not None)

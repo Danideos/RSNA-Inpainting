@@ -38,7 +38,7 @@ def update_inpainted_square(img_index, grid_key, square_key, inpainted_square=No
     if inpainted_square is not None:
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image'].append(inpainted_square)
     if metrics is not None:
-        if index is None:
+        if index is None or len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics']) == 0:
             st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'].append(metrics)
         else:
             st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics'][index] = metrics
@@ -49,7 +49,7 @@ def update_inpainted_square(img_index, grid_key, square_key, inpainted_square=No
     elif len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics']) == 1 or len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['inpainted_square_image']) == 1:
         st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['index'] = 0
     if threshold is not None:
-        if index is None:
+        if index is None or len(st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['thresholds']) == 0:
             st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['thresholds'].append(threshold)
         else:
             st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['thresholds'][index] = threshold

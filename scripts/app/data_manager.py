@@ -66,6 +66,24 @@ class DataManager:
                 for key, value in state_dict.items():
                     st.session_state[key] = value
 
+    @staticmethod
+    def save_metrics_state(metric_save_path):
+        metric_save_dir = '/research/projects/DanielKaiser/RSNA_Inpainting/scripts/app/outputs/metrics'
+        metric_path = os.path.join(metric_save_dir, metric_save_path)
+        metric_dict = {}
+        for img_index in range(len(st.session_state['all_inpainted_square_images'])):
+            metric_dict[img_index] = {}
+            for grid_key in st.session_state['all_inpainted_square_images'][img_index].keys():
+                metric_dict[img_index][grid_key] = {}
+                for square_key in st.session_state['all_inpainted_square_images'][img_index][grid_key].keys():
+                    metrics = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['metrics']
+                    metric_dict[img_index][grid_key][square_key] = metrics
+        
+        with open(metric_path, 'wb') as f:
+            pickle.dump(metric_dict, f)
+
+        print(f"Metrics saved successfully to {metric_path}")
+
 def handle_datamanagement_toggle_buttons():
     with st.expander("Data Management"):
         save_path = st.text_input('Enter the path to save session state:')
@@ -83,3 +101,8 @@ def handle_datamanagement_toggle_buttons():
                 st.success("Load successfull")
             else:
                 st.error('Please enter a valid load path.')
+        
+        metrics_save_path = st.text_input('Enter the path to save metrics log:')
+        if st.button('Save Metrics Log'):
+            if metrics_save_path:
+                DataManager.save_metrics_state(metrics_save_path)

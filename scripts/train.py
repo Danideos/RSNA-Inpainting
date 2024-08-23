@@ -7,7 +7,7 @@ import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,2"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -39,18 +39,18 @@ def train(input_dir, mask_dir=None):
     print(f"train dataset size: {len(train_ds)}")
     torch.cuda.empty_cache()
 
-    # model = DiffusionModule(
-    #     "./config.yaml",
-    #     train_ds=train_ds,
-    #     val_ds=val_ds,
-    #     dl_workers=8,
-    #     train_sampler=train_sampler,
-    #     batch_size=BATCH_SIZE,
-    #     val_batch_size=max(1, BATCH_SIZE // 2),
-    #     with_condition=True,
-    # )
+    model = DiffusionModule(
+        "./config.yaml",
+        train_ds=train_ds,
+        val_ds=val_ds,
+        dl_workers=8,
+        train_sampler=train_sampler,
+        batch_size=BATCH_SIZE,
+        val_batch_size=max(1, BATCH_SIZE // 2),
+        with_condition=True,
+    )
     # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
-    # model_path = "/home/bje01/Documents/RSNA-Inpainting/outputs/pl/cranial_ct_inpainting-epoch=0-step=60000-val_loss=0.001024.ckpt"
+    model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/EM(FE,G5,T1.5)_2A100-epoch=7-step=36472-val_loss=0.000855.ckpt"
     model = DiffusionModule(
         "./config.yaml",
         train_ds=train_ds,
@@ -61,7 +61,7 @@ def train(input_dir, mask_dir=None):
         val_batch_size=max(1, BATCH_SIZE // 2),
         with_condition=True,
     )
-    # model.load_ckpt(model_path, ema=True)
+    model.load_ckpt(model_path, ema=True)
     # model.load_ckpt(model_path, ema=True)
     model.cuda()
 
@@ -73,7 +73,7 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="EM(FE,G5,T1.5)_2A100",
+        logger_instance="EM(FEv3,G5,T1.5)_2A100",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
 

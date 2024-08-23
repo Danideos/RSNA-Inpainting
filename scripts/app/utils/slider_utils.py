@@ -47,7 +47,10 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
             pixel_dist = st.number_input('Select Pixel Distance', 0, 80, 8, step=1)
             pixel_exceed_count = st.number_input('Select Pixel Exceed Count', 0, 250, 0, step=1)
             pre_boundary_count = st.slider('Select Pre-Boundary Count', 0, 80, 5, step=1)
+            mean_diff = st.number_input('Select Mean Diff', -50.0, 50.0, -50.0, step=0.1)
+            changing_square_length = st.selectbox('Select Square Size to Apply Thresholds To:', square_lengths)
             ThresholdingPipeline.change_threshold_params(
+                square_length=changing_square_length,
                 threshold_percent=threshold_percent,
                 difference_percent=difference_percent,
                 valid_square_percent=valid_square_percent,
@@ -56,7 +59,8 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
                 emd=emd,
                 mse=mse,
                 pixel_dist=pixel_dist,
-                pixel_exceed_count=pixel_exceed_count
+                pixel_exceed_count=pixel_exceed_count,
+                mean_diff=mean_diff
             )
             
             dx, dy = offset_option % 2 * square_length // 2, offset_option // 2 * square_length // 2

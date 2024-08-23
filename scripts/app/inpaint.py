@@ -47,9 +47,9 @@ def inpaint_square(image_path, square, mask, img_size, offset, img_index, inpain
     st.session_state['show_inpainted_square'] = True
 
 def inpaint_grid(image_path, img_size, square, offset, img_index, inpaint_parameters):
-    contour_path, edge_path = get_contour_path(image_path)
+    contour_path, edge_path, left_path, right_path = get_contour_path(image_path)
     square_length = square[2]
-    all_inpainted_squares = get_inpainted_image_squares(image_path, contour_path, edge_path, img_index, img_size, square_length, offset, inpaint_parameters)
+    all_inpainted_squares = get_inpainted_image_squares(image_path, contour_path, edge_path, left_path, right_path, img_index, img_size, square_length, offset, inpaint_parameters)
 
     update_inpainted_squares(all_inpainted_squares, inpaint_parameters=inpaint_parameters)
     st.session_state['show_inpainted_square'] = True
@@ -112,7 +112,7 @@ def get_inpainted_square(square, image_path, contour_path, edge_path, grid_mask,
     
     return inpainted_square
 
-def get_inpainted_image_squares(image_path, contour_path, edge_path, img_index, img_size, square_length, offset, inpaint_parameters):
+def get_inpainted_image_squares(image_path, contour_path, edge_path, left_path, right_path, img_index, img_size, square_length, offset, inpaint_parameters):
     args = create_args(image_path, square_length, inpaint_parameters)
 
     inpainted_mask_squares = []
@@ -122,7 +122,7 @@ def get_inpainted_image_squares(image_path, contour_path, edge_path, img_index, 
             grid_mask = st.session_state['masks'][square_length][(i % 3 + 3 * (j % 3)) * 4 + offset]
              # Preprocess image and mask
             grid_mask = torch.tensor(grid_mask).transpose(1, 0)
-            img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], [edge_path], args, img_size=512, resize_size=img_size, grid=grid_mask)
+            img_tensors, concat_tensors, img_ids = preprocess_images([image_path], [contour_path], [edge_path], [left_path], [right_path], args, img_size=512, resize_size=img_size, grid=grid_mask)
 
             # Inpaint image
             grid_mask = grid_mask.unsqueeze(0).unsqueeze(0).float()

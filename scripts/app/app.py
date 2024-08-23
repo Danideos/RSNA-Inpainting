@@ -30,7 +30,7 @@ import app.show_images
 import app.data_manager
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 def reload_modules():
@@ -61,7 +61,8 @@ def display_image_selector():
     # Initialize streamlit states
     initialize_states(square_lengths=square_lengths, img_size=img_size)
 
-    series_path = os.getenv("SERIES_PATH")
+    series_path = st.text_input('Enter series path:', value="")
+    series_path = os.getenv("SERIES_PATH") if len(series_path) == 0 else series_path
     series, series_image_paths = DataManager.load_series(series_path)
 
     # Handle input from slider params

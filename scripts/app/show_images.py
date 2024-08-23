@@ -24,7 +24,6 @@ def show_image(series, series_image_paths,
         set_x_and_y(value, image.size[0], square[2])
         value = None
 
-@st.cache_data
 def display_series_statistics(series, series_image_paths, is_inpainted_, square_lengths, img_size, _left_col):
     results = {"FP": [],
                "TP": []
@@ -37,26 +36,52 @@ def display_series_statistics(series, series_image_paths, is_inpainted_, square_
     # Display the FP and TP results in the left column
     with _left_col:
         st.write("True Positives (TP):")
+        all_tp = {}
         for tp in results["TP"]:
-            st.write(tp)
-        
+            if tp["img_index"] not in all_tp:
+                all_tp[tp["img_index"]] = {}
+                for square_length in square_lengths:
+                    all_tp[tp["img_index"]][square_length] = 0
+                all_tp[tp["img_index"]][tp["square_length"]] += 1
+            else:
+                all_tp[tp["img_index"]][tp["square_length"]] += 1
+        for img_index, key in all_tp.items():
+            report = f"img_index: {img_index}:\n"
+            for square_length in square_lengths:
+                report += f"\tsquare_length {square_length}: {all_tp[img_index][square_length]}\n"
+            st.text(report)
+
         st.write("False Positives (FP):")
+        all_fp = {}
         for fp in results["FP"]:
-            st.write(fp)
+            if fp["img_index"] not in all_fp:
+                all_fp[fp["img_index"]] = {}
+                for square_length in square_lengths:
+                    all_fp[fp["img_index"]][square_length] = 0
+                all_fp[fp["img_index"]][fp["square_length"]] += 1
+            else:
+                all_fp[fp["img_index"]][fp["square_length"]] += 1
+        for img_index, key in all_fp.items():
+            report = f"img_index: {img_index}:\n"
+            for square_length in square_lengths:
+                report += f"\tsquare_length {square_length}: {all_fp[img_index][square_length]}\n"
+            st.text(report)
+        
 
 
 def get_threshold(x, y, series_image_paths, square_length, offset, img_index, results):
     square = (x, y, square_length)
     grid_key, square_key = get_keys(square, offset)
     index = get_current_index(img_index, square, offset)
+
     if index is None: return
     threshold = st.session_state['all_inpainted_square_images'][img_index][grid_key][square_key]['thresholds'][index]
     is_thresholded = threshold['is_beyond_threshold']
     if is_thresholded:
         if int(series_image_paths[img_index].split(".")[0].split("_")[-1]) == 1: 
-            results["TP"].append(f"img index: {img_index}, key: {grid_key}, {square_key}")
+            results["TP"].append({"img_index": img_index, "square_length": square_length})
         else:
-            results["FP"].append(f"img index: {img_index}, key: {grid_key}, {square_key}")
+            results["FP"].append({"img_index": img_index, "square_length": square_length})
 
 def display_image(square, offset, image, image_path, mask, is_inpainted, grid_key, square_key, index, img_index, _middle_col):
     with _middle_col:

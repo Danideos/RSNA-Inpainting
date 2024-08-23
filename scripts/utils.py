@@ -17,6 +17,7 @@ from tqdm import tqdm
 from noise import snoise3
 from scipy.ndimage import convolve
 import cv2
+from testing.get_edges import process_image
 
 
 def generate_masks_and_noise(amount=12000):
@@ -148,7 +149,7 @@ def lambda_transform_with_grid(data, grid):
     # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
     # plt.title('Masked Image with Simplex Noise')
     # plt.show()\
-    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), concat[2].unsqueeze(0), concat[3].unsqueeze(0), masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
     
     
     data['concat'] = combined / 127.5 - 1
@@ -172,7 +173,10 @@ def lambda_transform(data):
     # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
     
     masked_img = img_tensor * (1 - mask_tensor) # + simplex_tensor * mask_tensor
-    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
+
+    edge_image = process_image(img[0].detach().cpu().numpy()) 
+    edge_image = concat[1] if edge_image is None else edge_image
+    combined = torch.cat([concat[0].unsqueeze(0), torch.tensor(edge_image, dtype=torch.float).unsqueeze(0), masked_img], dim=0)
     
     data['concat'] = combined / 127.5 - 1
     data['img'] = img / 127.5 - 1
