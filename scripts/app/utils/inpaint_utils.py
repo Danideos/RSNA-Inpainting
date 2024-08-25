@@ -31,8 +31,9 @@ def handle_inpaint_toggle_buttons(series, series_image_paths, square_lengths, sq
                 ThresholdingPipeline.calculate_series_thresholds(series, square_lengths)
 
             if st.button('Predict Directory'):
-                directory = '/research/Data/DK_RSNA_HM/series_stage_1_test/healthy/parameter_train'
-                for series_id in os.listdir(directory)[4:]:
+                directory = '/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train'
+                for series_id in sorted(os.listdir(directory))[75:]:
+                    print('Predicting series ID:', series_id)
                     # Cleanup statedict
                     reset_session_state(square_lengths, img_size, series_id)
 

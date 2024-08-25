@@ -56,7 +56,7 @@ def display_image_selector():
         reload_modules()
 
     # Initialize streamlit states
-    initialize_states(square_lengths=square_lengths)
+    initialize_states(square_lengths=square_lengths, img_size=256)
 
     series_path = st.text_input('Enter series path:', value="")
     series_path = os.getenv("SERIES_PATH") if len(series_path) == 0 else series_path

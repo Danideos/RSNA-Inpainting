@@ -68,7 +68,7 @@ class DataManager:
 
     @staticmethod
     def save_metrics_state(metric_save_path):
-        metric_save_dir = '/research/projects/DanielKaiser/RSNA_Inpainting/scripts/app/outputs/metrics'
+        metric_save_dir = '/research/projects/DanielKaiser/RSNA_Inpainting/scripts/app/outputs/metrics_unhealthy'
         metric_path = os.path.join(metric_save_dir, metric_save_path)
         metric_dict = {}
         for img_index in range(len(st.session_state['all_inpainted_square_images'])):
