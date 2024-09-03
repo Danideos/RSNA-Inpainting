@@ -13,7 +13,7 @@ diffusion:
 
 optimizer:
   lr: 0.00001
-  type: PytorchUtils.bkh_pytorch_utils.Lion
+  type: libs.PytorchUtils_Fork.bkh_pytorch_utils.Lion
 
 validation:
   classifier_cond_scale: 4
@@ -28,7 +28,7 @@ model:
   attention_resolutions: [8, 16, 32]
   channel_mult: [0.5, 1, 1, 2, 2, 4, 4]
   dropout: 0.0
-  in_channels: 4
+  in_channels: 3
   out_channels: 2
   model_channels: 128
   num_head_channels: -1
@@ -43,13 +43,13 @@ model:
   
   # conditions
   num_classes: 0
-  concat_channels: 3
+  concat_channels: 2
   guidance_drop_prob: 0.1
   missing_class_value: null
 
 hyperparameters:
   img_size: 512
   total_image_seen: 40e6
-  batch_size: 40
+  batch_size: 10
   accumulate_grad_batches: 1
-  num_devices: 2
+  num_devices: 1

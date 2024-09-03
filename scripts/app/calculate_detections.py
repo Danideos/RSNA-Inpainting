@@ -9,7 +9,7 @@ THRESHOLD_PARAMS = {
         "mse": 100, 
         "emd": 7.5, 
         "std_dev_diff": 3,
-        "mean_diff": -20,
+        "mean_diff": 3,
         "pixel_dist": 10,           # Pixel distance threshold
         "pixel_exceed_count": 0,    # Count threshold for pixels that exceed the pixel_dist
         "total_difference": -100,
@@ -19,7 +19,7 @@ THRESHOLD_PARAMS = {
         "mse": 75, 
         "emd": 8, 
         "std_dev_diff": 2.5,
-        "mean_diff": -20,
+        "mean_diff": 3,
         "pixel_dist": 10,           
         "pixel_exceed_count": 0,    
         "total_difference": -100,
@@ -29,7 +29,7 @@ THRESHOLD_PARAMS = {
         "mse": 50, 
         "emd": 6.0, 
         "std_dev_diff": 2,
-        "mean_diff": -20,
+        "mean_diff": 3,
         "pixel_dist": 10,           
         "pixel_exceed_count": 0,    
         "total_difference": -100,
@@ -39,7 +39,7 @@ THRESHOLD_PARAMS = {
         "mse": 50, 
         "emd": 4.0, 
         "std_dev_diff": 1.5,
-        "mean_diff": -20,
+        "mean_diff": 3,
         "pixel_dist": 10,           
         "pixel_exceed_count": 0,    
         "total_difference": -100,
@@ -174,15 +174,23 @@ def main(metrics_dir, series_dir, square_lengths):
         results = pool.map(process_series_wrapper, tasks)
     
     # Print results
+    c = 0
     for result, metric_file in zip(results, metric_files):
         print(f"Results for {os.path.basename(metric_file)}:")
         print(f"True Positives (TP): {result['TP']}")
         print(f"False Positives (FP): {result['FP']}")
         print()
+        detected = False
+        for square_length in square_lengths:
+            if square_length != 8:
+                if result["FP"][square_length] >= 1 or result["TP"][square_length] >= 1:
+                    detected = True
+        c += int(detected)
+    print(f"{c}/{len(results)}")
 
 if __name__ == "__main__":
     metrics_dir = "/research/projects/DanielKaiser/RSNA_Inpainting/scripts/app/outputs/metrics_unhealthy"
     series_dir = "/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train"
-    square_lengths = [8, 16, 32, 64]
+    square_lengths = [32, 64]
 
     main(metrics_dir, series_dir, square_lengths)

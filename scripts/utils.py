@@ -9,7 +9,7 @@ from monai.data import Dataset
 import monai.transforms as mt
 import pydicom
 import numpy as np
-from mediffusion.ddpm import DiffusionModule
+from libs.Mediffusion_Fork.ddpm import DiffusionModule
 from joblib import Parallel, delayed
 import pandas as pd
 from collections import defaultdict
@@ -18,6 +18,7 @@ from noise import snoise3
 from scipy.ndimage import convolve
 import cv2
 from testing.get_edges import process_image
+import math
 
 
 def generate_masks_and_noise(amount=12000):
@@ -77,39 +78,51 @@ def analyze_csv(csv_file, series_to_slices):
 
     return series_label_counts
 
-def generate_single_mask(img_shape, square_length, shift=None):
+def generate_single_square_mask(img_shape, square_length, contour_mask=None):
     h, w = img_shape
     grid_h = h // square_length
     grid_w = w // square_length
     
-    i = random.randint(0, 2)
-    j = random.randint(0, 2)
+    
+    if contour_mask is None:
+        y = random.randint(0, grid_h)
+        x = random.randint(0, grid_w)
+        
+        mask = np.zeros((h, w), dtype=np.uint8)
+        mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
+    else:
+        c = 0
+        while c <= 30:
+            y = random.randint(0, grid_h)
+            x = random.randint(0, grid_w)
+            
+            mask = np.zeros((h, w), dtype=np.uint8)
+            mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
+
+            if np.sum(mask * contour_mask) >= square_length ** 2 * 255:
+                break
+            c += 1
+
+    apply_random_shift(mask, square_length)
+    
+    return mask
+
+def generate_single_mask(img_shape, square_length=None, shift=None):
+    if square_length is None:
+        square_length = random.choice([8, 16, 32, 64])
+    h, w = img_shape
+    grid_h = h // square_length
+    grid_w = w // square_length
+    
+    i = random.randint(0, 1)
+    j = random.randint(0, 1)
     mask = np.zeros((h, w), dtype=np.uint8)
-    # if random.random() < 0.5:
-    #     noise_high = noise_low.copy()
-    # noise = noise_low.copy()
     
     for y in range(j, grid_h, 3):
         for x in range(i, grid_w, 3):
             mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
-            # if random.random() < 0.5:
-            #     noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-            # else:
-            #     noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-
-    # all_squares = [(y, x) for y in range(grid_h) for x in range(grid_w)]
-    # random.shuffle(all_squares)
-    # n = random.choice(0, len(all_squares) // 10)
-    # selected_squares = all_squares[:n]
-    
-    # for y, x in selected_squares:
-    #     mask[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = 1
-    #     if random.random() < 0.5:
-    #         noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_low[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
-    #     else:
-    #         noise[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length] = noise_high[y*square_length:(y+1)*square_length, x*square_length:(x+1)*square_length]
+          
     mask = apply_random_shift(mask, square_length, shift)
-    # mask = smooth_mask_edges(mask, square_length)
     
     return mask
 
@@ -149,7 +162,7 @@ def lambda_transform_with_grid(data, grid):
     # plt.imshow(masked_img.squeeze().numpy(), cmap='gray')
     # plt.title('Masked Image with Simplex Noise')
     # plt.show()\
-    combined = torch.cat([concat[0].unsqueeze(0), concat[1].unsqueeze(0), masked_img], dim=0)
+    combined = torch.cat([concat[0].unsqueeze(0), concat[2].unsqueeze(0), concat[3].unsqueeze(0), masked_img], dim=0)
     
     
     data['concat'] = combined / 127.5 - 1
@@ -160,27 +173,89 @@ def lambda_transform_with_grid(data, grid):
 def lambda_transform(data):
     img = data['img']
     concat = data['concat']
+    bb_data = data['data']
     
-    square_length = random.choice([8, 16, 32, 64])
-    mask = generate_single_mask(img.shape[-2:], square_length)
-    # random_mask = random.randint(0, len(masks_and_noise) - 1)
-    # mask, noise = masks_and_noise[random_mask]
-    mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
+    # square_length = random.choice([8, 16, 32, 64])
+    # mask = generate_single_mask(img.shape[-2:], square_length)
+    # # random_mask = random.randint(0, len(masks_and_noise) - 1)
+    # # mask, noise = masks_and_noise[random_mask]
+    # mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
     img_tensor = img.clone().detach()
 
     # simplex_img = img + noise * 255
     # simplex_img = np.clip(simplex_img, 0, 255)
     # simplex_tensor = torch.tensor(simplex_img, dtype=torch.float)
     
-    masked_img = img_tensor * (1 - mask_tensor) # + simplex_tensor * mask_tensor
+    # r = random.randint(0, len(bb_data) - 1)
+    mask = np.zeros(img.shape[-2:], dtype=np.uint8)
+    masked_img = img_tensor.clone().detach()
+    r = random.randint(0, len(bb_data) - 1)
+    # for r in range(len(bb_data)):
+    topleft_x = bb_data[r]['topleft_x']
+    topleft_y = bb_data[r]['topleft_y']
+    bottomright_x = bb_data[r]['bottomright_x']
+    bottomright_y = bb_data[r]['bottomright_y']
 
-    edge_image = process_image(img[0].detach().cpu().numpy()) 
-    edge_image = concat[1] if edge_image is None else edge_image
-    combined = torch.cat([concat[0].unsqueeze(0), torch.tensor(edge_image, dtype=torch.float).unsqueeze(0), masked_img], dim=0)
+    mask[topleft_y:bottomright_y,topleft_x:bottomright_x] = 1
+    mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
+    masked_img = masked_img * (1 - mask_tensor)
+
+    # edge_image = process_image(img[0].detach().cpu().numpy()) 
+    # edge_image = concat[1] if edge_image is None else edge_image
+
+    # Shift the image and the concatenated data in the same way
+    shift_x = random.randint(-5, 5)
+    shift_y = random.randint(-5, 5)
+    img_tensor_shifted = torch.roll(img_tensor, shifts=(shift_x, shift_y), dims=(-2, -1))
+    concat_shifted = torch.roll(concat, shifts=(shift_x, shift_y), dims=(-2, -1))
+    masked_img_shifted = torch.roll(masked_img, shifts=(shift_x, shift_y), dims=(-2, -1))
+    combined = torch.cat([concat_shifted[0].unsqueeze(0), masked_img_shifted], dim=0)
+    
+    # combined = torch.cat([concat[0].unsqueeze(0), masked_img], dim=0)
     
     data['concat'] = combined / 127.5 - 1
-    data['img'] = img / 127.5 - 1
+    data['img'] = img_tensor_shifted / 127.5 - 1
+    
+    # plt.figure(figsize=(10, 5))
+    
+    # plt.subplot(1, 2, 1)
+    # plt.title('Original Image (Shifted)')
+    # plt.imshow(img_tensor_shifted.squeeze().cpu().numpy(), cmap='gray')
+    
+    # plt.subplot(1, 2, 2)
+    # plt.title(f'Masked Image (Shifted),  r:{r}, total:{len(bb_data)}')
+    # plt.imshow(masked_img_shifted.squeeze().cpu().numpy(), cmap='gray')
+    
+    # plt.show()
 
+    return data
+
+def lambda_transform_single_square(data):
+    img = data['img']
+    concat = data['concat']
+    
+    # square_length = 16
+    # mask = generate_single_square_mask(img.shape[-2:], square_length, concat[0])
+    mask = generate_single_mask(img.shape[-2:])
+    img_tensor = img.clone().detach()
+    mask_tensor = torch.tensor(mask, dtype=torch.float).unsqueeze(0)
+    masked_img = img_tensor * (1 - mask_tensor)
+
+    combined = torch.cat([concat[0].unsqueeze(0), mask_tensor, concat[1].unsqueeze(0), concat[2].unsqueeze(0), masked_img], dim=0)
+    
+    data['concat'] = combined / 127.5 - 1
+    data['img'] = img_tensor / 127.5 - 1
+   
+    # plt.imshow(masked_img.squeeze().cpu().numpy(), cmap='gray')
+    # plt.show()
+
+    return data
+
+def deselect_key(x, key_to_deselect="data"):
+    data = {}
+    for key, value in x.items():
+        if key != key_to_deselect:
+            data[key] = value
     return data
 
 def smooth_mask_edges(mask, square_length):

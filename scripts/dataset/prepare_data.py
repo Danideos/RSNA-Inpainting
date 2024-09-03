@@ -6,7 +6,26 @@ from PIL import Image
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-from utils import apply_window, apply_mask
+
+def apply_window(img, center, width):
+    '''
+    Applies the windowing technique to the given image tensor or numpy array.
+    '''
+    min_value = center - width // 2
+    max_value = center + width // 2
+    
+    if isinstance(img, np.ndarray):
+        img = np.clip(img, min_value, max_value)
+        img = (img - min_value) / (max_value - min_value)
+    else:
+        raise TypeError("Input must be a numpy.ndarray")
+    
+    return img
+
+def apply_mask(image, mask):
+    mask = mask > 0
+    masked_image = np.where(mask, image, image.min())
+    return masked_image
 
 
 def is_slice_valid(slice_img, threshold_fraction):
@@ -32,34 +51,50 @@ def process_nifti_file(nifti_path, mask_path, dcm_dir, threshold_fraction):
     valid_slices = []
     invalid_slices = []
     invalid_count = 0
+    valid_count = 0
     
     nifti_img = nib.load(nifti_path)
     mask_img = nib.load(mask_path)
 
     nifti_data = nifti_img.get_fdata()
-    mask_data = mask_img.get_fdata()
-
+    mask_data = mask_img.get_fdata()[:,:,0]
     masked_data = apply_mask(nifti_data, mask_data)
 
-    for i in range(masked_data.shape[2]):
-        masked_img = masked_data[:, :, i]
-        unmasked_img = nifti_data[:, :, i]
-        mask_img_slice = mask_data[:, :, i]
 
-        unmasked_img = apply_window(unmasked_img, 40, 80)
-        windowed_slice = apply_window(masked_img, 40, 80)
+    masked_img = masked_data
+    unmasked_img = nifti_data
+    mask_img_slice = mask_data
+
+    unmasked_img = apply_window(unmasked_img, 40, 80)
+    windowed_slice = apply_window(masked_img, 40, 80)
+
+    base_name = os.path.basename(nifti_path)[:-6]
+    if is_slice_valid(windowed_slice, threshold_fraction):
+        valid_slices.append((windowed_slice, unmasked_img, base_name, 0, mask_img_slice))
+        valid_count += 1
+    else:
+        invalid_slices.append((windowed_slice, unmasked_img, base_name, 0, masked_img))
+        invalid_count += 1
+    # for i in range(masked_data.shape[2]):
+    #     masked_img = masked_data[:, :, i]
+    #     unmasked_img = nifti_data[:, :, i]
+    #     mask_img_slice = mask_data[:, :, i]
+
+    #     unmasked_img = apply_window(unmasked_img, 40, 80)
+    #     windowed_slice = apply_window(masked_img, 40, 80)
         
-        base_name = os.path.basename(nifti_path).split('.')[0]
-        if is_slice_valid(windowed_slice, threshold_fraction):
-            valid_slices.append((windowed_slice, unmasked_img, base_name, i, mask_img_slice))
-        else:
-            invalid_slices.append((windowed_slice, unmasked_img, base_name, i, masked_img))
-            invalid_count += 1
-
-    return invalid_count, masked_data.shape[2], valid_slices, invalid_slices
+    #     base_name = os.path.basename(nifti_path)[:-6]
+    #     if is_slice_valid(windowed_slice, threshold_fraction):
+    #         valid_slices.append((windowed_slice, unmasked_img, base_name, i, mask_img_slice))
+    #     else:
+    #         invalid_slices.append((windowed_slice, unmasked_img, base_name, i, masked_img))
+    #         invalid_count += 1
+   
+    return invalid_count, valid_count + invalid_count, valid_slices, invalid_slices
 
 def save_valid_slices(slices, bet_png_dir, mask_png_dir, description):
     for masked_slice, unmasked_slice, base_name, i, mask_img in tqdm(slices, desc=description):
+        print(base_name)
         name = f"{base_name}.png"
         img_output_path = os.path.join(bet_png_dir, name)
         mask_output_path = os.path.join(mask_png_dir, name)
@@ -100,6 +135,7 @@ def create_series_output_dirs(base_dir, health, series_id, test_fraction):
 
 
 def process_files(nifti_dir, mask_dir, dcm_dir, threshold_fraction, files, n_jobs):
+    print(len(files), len([file for file in files if os.path.exists(os.path.join(mask_dir, file))]))
     results = Parallel(n_jobs=n_jobs)(
         delayed(process_nifti_file)(
             os.path.join(nifti_dir, nifti_file),
@@ -124,7 +160,7 @@ def process_nifti_directory(output_dir, health, nifti_dir, mask_dir, dcm_dir, th
             nifti_files = [f for f in os.listdir(series_nifti_dir) if f.endswith('.nii.gz')]
             print(f"Processing series {series_dir} with {len(nifti_files)} files")
             
-            batch_size = 100  # Adjust this value based on your memory constraints
+            batch_size = 1000  # Adjust this value based on your memory constraints
             for i in range(0, len(nifti_files), batch_size):
                 batch_files = nifti_files[i:i + batch_size]
                 batch_results = process_files(series_nifti_dir, series_mask_dir, dcm_dir, threshold_fraction, batch_files, n_jobs)
@@ -136,7 +172,6 @@ def process_nifti_directory(output_dir, health, nifti_dir, mask_dir, dcm_dir, th
                     invalid_slices.extend(result[3])
                     total_invalid_slices += result[0]
                     total_slices += result[1]
-                
                 if test_fraction > 0.0 and test_fraction < 1.0:
                     train_slices, test_slices = train_test_split(valid_slices, test_size=test_fraction, random_state=42)
                     save_valid_slices(train_slices, bet_png_dir_train_series, mask_png_dir_train_series, f"Saving train slices (batch {i//batch_size + 1})")
@@ -152,7 +187,7 @@ def process_nifti_directory(output_dir, health, nifti_dir, mask_dir, dcm_dir, th
         bet_png_dir_train, mask_png_dir_train, bet_png_dir_test, mask_png_dir_test, invalid_dir = create_output_dirs(output_dir, test_fraction, health)
         nifti_files = [f for f in os.listdir(nifti_dir) if f.endswith('.nii.gz')]
         print("nifti amount of files:", len(nifti_files))
-        batch_size = 100  # Adjust this value based on your memory constraints
+        batch_size = 1000  # Adjust this value based on your memory constraints
         total_invalid_slices = 0
         total_slices = 0
 
@@ -167,6 +202,7 @@ def process_nifti_directory(output_dir, health, nifti_dir, mask_dir, dcm_dir, th
                 invalid_slices.extend(result[3])
                 total_invalid_slices += result[0]
                 total_slices += result[1]
+            print(len(valid_slices))
 
             if test_fraction > 0.0 and test_fraction < 1.0:
                 train_slices, test_slices = train_test_split(valid_slices, test_size=test_fraction, random_state=42)

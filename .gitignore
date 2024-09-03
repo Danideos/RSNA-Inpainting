@@ -1,13 +1,26 @@
+# Bytecode and Cache
+**/__pycache__/*
+*.py[cod]
+
+# Virtual Environments and System Files
+venv/
+.env
+.env/
+
+# IDE and Editor Configurations
 .vscode/*
-outputs/*
+
+# Project-specific Files and Directories
+outputs/
+scripts/app/outputs/*
 series_label_counts_test.pkl
 series_to_slices_test.pkl
-.env
+
+# Testing and Experimentation Scripts
 scripts/testing/*
-scripts/CT_BET_GPU/*
-scripts/PytorchUtils/*
-scripts/PytorchUtils
+
+# Miscellaneous Project Files
+scripts/PytorchUtils/
 scripts/mediffusion/*
-scripts/app/outputs/*
-**/__pycache__/*
-__pycache__/
+scripts/CT_BET_GPU/*
+
