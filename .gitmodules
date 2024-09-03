@@ -1,0 +1,9 @@
+[submodule "libs/Mediffusion_Fork"]
+	path = libs/Mediffusion_Fork
+	url = https://github.com/Danideos/Mediffusion_Fork.git
+[submodule "libs/PytorchUtils_Fork"]
+	path = libs/PytorchUtils_Fork
+	url = https://github.com/Danideos/PytorchUtils_Fork.git
+[submodule "libs/CT_BET_Fork"]
+	path = libs/CT_BET_Fork
+	url = https://github.com/Danideos/CT_BET_Fork.git
