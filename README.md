@@ -14,7 +14,7 @@ NIfTI slices are brain extracted with a [robust brain extraction tool](https://g
 
 ### Detection 
 
-To detect anomalies during inference, the inpainted area has to be small enough so that anomalies can be detected, while also big enough to cover most of the anomalous area. Also we do not now the area or location of the anomaly beforehand: For that reason, patch-wise inpainting strategy has been chosen, where individual squares on a grid are sequentially inpainted. Multiple square sizes[8, 16, 32, 64] with half-square offsets are utilized to ensure coverage of anomalies of various sizes. 
+To detect anomalies during inference, the inpainted area has to be small enough so that anomalies can be detected, while also big enough to cover most of the anomalous area. Also we do not now the area or location of the anomaly beforehand: For that reason, patch-wise inpainting strategy has been chosen, where individual squares on a grid are sequentially inpainted. Multiple square sizes `[8, 16, 32, 64]` with half-square offsets are utilized to ensure coverage of anomalies of various sizes. 
 
 For detection itself, the idea is to detect the anomalous areas by simple thresholding. Finding the ideal metrics proved to be quite difficult, so a thresholding tool with streamlit has been developed to be able to visually see on a whole CT scan the results of various thresholding metrics and strategies. 
 
@@ -25,5 +25,5 @@ As for the inpainting model, fork of [mediffusion](https://github.com/BardiaKh/M
 The training is conditioned on the extracted brain masks to preserve the shape of the inpainted areas, slices above and below the inpainted slice and the whole image besides the masked inpainted area. 
 
 **More about the inpainting masks:** 
-There is an issue with the inference speed of diffusion models, especially considering the chosen patch-wise grid inpainting strategy, this issue is made even worse by the fact that the resampling strategy from RePaint slows down inference 10x-100x fold, so to resolve this, grid is inpainted in parallel as shown in the image below - 1/9th of conditioning information is lost at the tradeoff of 9 inference runs per grid. 
+There is an issue with the inference speed of diffusion models, especially considering the chosen patch-wise grid inpainting strategy, this issue is made even worse by the fact that the resampling strategy from RePaint slows down inference 10x-100x fold, so to resolve this, grid is inpainted in parallel as shown in the image below - 1/9th of the conditioning information is lost at the tradeoff of 9 inference runs per grid. 
 

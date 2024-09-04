@@ -19,6 +19,7 @@ from scipy.ndimage import convolve
 import cv2
 from testing.get_edges import process_image
 import math
+import torchvision.transforms as T
 
 
 def generate_masks_and_noise(amount=12000):
@@ -141,6 +142,28 @@ def plot_image(tensor, title):
     plt.title(title)
     plt.axis('off')
     plt.show()
+
+def lambda_transform_ano(data):
+    img = data['img']
+    concat = data['concat']
+    concat256 = data['concat256']
+    img_tensor = img.clone().detach()
+    rotated_concat256 = torch.flip(torch.rot90(concat256[0].unsqueeze(0), k=-1, dims=[1, 2]), [-1])
+    # Choose at random whether to provide anomalous version or healthy version
+    reference = random.choice([rotated_concat256, img_tensor])
+    blur_transform = T.GaussianBlur(kernel_size=(5, 5), sigma=(1.5, 1.5))
+    blurred_reference = blur_transform(reference)
+    combined = torch.cat([blurred_reference, concat[0].unsqueeze(0), concat[1].unsqueeze(0)], dim=0)
+    
+    data['concat'] = combined / 127.5 - 1
+    data['img'] = img_tensor / 127.5 - 1
+
+    # # Plot for debugging
+    blurred_concat256 = blurred_reference
+    normalized = abs(img_tensor - blurred_concat256) - torch.min(abs(img_tensor - blurred_concat256)) / (torch.max(abs(img_tensor - blurred_concat256)) - torch.min(abs(img_tensor - blurred_concat256)))
+    plot_image(torch.cat([img_tensor, blurred_concat256, normalized], dim=1), "original+anomalous")
+   
+    return data
 
 
 def lambda_transform_with_grid(data, grid):

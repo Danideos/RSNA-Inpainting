@@ -2,13 +2,14 @@ from libs.Mediffusion_Fork.ddpm import DiffusionModule
 from libs.Mediffusion_Fork.trainer import Trainer
 from dataset.dataset_creation import create_dataset, get_datasamplers
 from utils import load_config, visualize_random_dataset_samples
+
 import os
 import torch
 import argparse
 
 torch.set_float32_matmul_precision('medium')
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
@@ -29,39 +30,42 @@ model_params = config['model']
 RESIZE_SIZE = model_params['input_size'] 
 
 
-def train(input_dir, mask_dir=None):    
-    data_dir = os.path.join(input_dir, "bet_png")
-    mask_dir = os.path.join(input_dir, "mask_png")
-    # edge_dir = os.path.join(input_dir, "edge_png")
-    left_dir = os.path.join(input_dir, "left_png")
-    right_dir = os.path.join(input_dir, "right_png")
-    train_ds, val_ds = create_dataset(data_dir, mask_dir, left_dir, right_dir, IMG_SIZE, RESIZE_SIZE)# edge_dir, 
+def create_file_dirs(input_dir, dir_names=["bet_png"]):
+    file_dirs = [os.path.join(input_dir, dir_name) for dir_name in dir_names]
+    return file_dirs
+
+def train(input_dir, resume=False):    
+    dir_names=["bet_png", "ano_png", "left_png", "right_png"]
+    file_dirs = create_file_dirs(input_dir, dir_names=dir_names)
+    train_ds, val_ds = create_dataset(file_dirs, required=dir_names, img_size=IMG_SIZE, resize_size=RESIZE_SIZE)# 
     train_sampler, val_sampler = get_datasamplers(train_ds, val_ds, TOTAL_IMAGE_SEEN)
     print(f"train dataset size: {len(train_ds)}")
     torch.cuda.empty_cache()
 
-    model = DiffusionModule(
-        "./config.yaml",
-        train_ds=train_ds,
-        val_ds=val_ds,
-        dl_workers=8,
-        train_sampler=train_sampler,
-        batch_size=BATCH_SIZE,
-        val_batch_size=max(1, BATCH_SIZE // 2),
-        with_condition=True,
-    )
-    # model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/EM(FE,G5,T1.5)_2A100-epoch=7-step=36472-val_loss=0.000855.ckpt"
-    # model = DiffusionModule(
-    #     "./config.yaml",
-    #     train_ds=train_ds,
-    #     val_ds=val_ds,
-    #     dl_workers=16,
-    #     train_sampler=train_sampler,
-    #     batch_size=BATCH_SIZE,
-    #     val_batch_size=max(1, BATCH_SIZE // 2),
-    #     with_condition=True,
-    # )
-    # model.load_ckpt(model_path, ema=True)
+    if resume is False:
+        model = DiffusionModule(
+            "./config.yaml",
+            train_ds=train_ds,
+            val_ds=val_ds,
+            dl_workers=12,
+            train_sampler=train_sampler,
+            batch_size=BATCH_SIZE,
+            val_batch_size=max(1, BATCH_SIZE // 2),
+            with_condition=True,
+        )
+    else:
+        model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/EM(FE,G5,T1.5)_2A100-epoch=7-step=36472-val_loss=0.000855.ckpt"
+        model = DiffusionModule(
+            "./config.yaml",
+            train_ds=train_ds,
+            val_ds=val_ds,
+            dl_workers=16,
+            train_sampler=train_sampler,
+            batch_size=BATCH_SIZE,
+            val_batch_size=max(1, BATCH_SIZE // 2),
+            with_condition=True,
+        )
+        model.load_ckpt(model_path, ema=True)
     model.cuda()
 
     trainer = Trainer(
@@ -72,17 +76,17 @@ def train(input_dir, mask_dir=None):
         devices=-1,
         nodes=1,
         wandb_project="cranial_ct_inpainting",
-        logger_instance="LocLoss+2.5D+CI_1A100",
+        logger_instance="AnoRemove+2.5D_2A100",
         accumulate_grad_batches=ACCUMULATE_GRAD_BATCHES
     )
-
-    # visualize_random_dataset_samples(train_ds, num_samples=5)
     
     trainer.fit(model)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-input_dir", "--input_dir", type=str)
+    parser.add_argument("-i", "--input_dir", type=str)
+    parser.add_argument("-r", "--resume", action='store_true')
+
     args = parser.parse_args()
 
-    train(args.input_dir)
+    train(args.input_dir, args.resume)
