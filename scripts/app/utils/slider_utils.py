@@ -33,8 +33,8 @@ def get_slider_parameters(square_lengths, img_size, series, series_image_paths, 
 
         with st.expander("Inpainting Parameters"):
             start_denoise_step = st.slider('Select Start Denoise Step:', 1, 100, 20)
-            resampling_steps = st.slider('Select Resampling Steps:', 1, 10, 1)
-            jump_length = st.slider('Select Jump Length:', 1, 10, 1)
+            resampling_steps = st.slider('Select Resampling Steps:', 0, 10, 0)
+            jump_length = st.slider('Select Jump Length:', 0, 10, 0)
             inpaint_parameters = (start_denoise_step, resampling_steps, jump_length)
 
         with st.expander("Thresholding Parameters"):

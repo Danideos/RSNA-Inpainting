@@ -6,11 +6,13 @@ from utils import load_config, visualize_random_dataset_samples
 import os
 import torch
 import argparse
+from dotenv import load_dotenv
 
 torch.set_float32_matmul_precision('medium')
 
+load_dotenv()
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
-os.environ['WANDB_API_KEY'] = "1ad7e01bcd34b7a32fbc85cfe575bb29cf1b3e5c"   
 
 # Load configuration
 CONFIG_PATH = "./config.yaml"
@@ -47,7 +49,7 @@ def train(input_dir, resume=False):
             "./config.yaml",
             train_ds=train_ds,
             val_ds=val_ds,
-            dl_workers=12,
+            dl_workers=48,
             train_sampler=train_sampler,
             batch_size=BATCH_SIZE,
             val_batch_size=max(1, BATCH_SIZE // 2),

@@ -28,7 +28,7 @@ model:
   attention_resolutions: [8, 16, 32]
   channel_mult: [0.5, 1, 1, 2, 2, 4, 4]
   dropout: 0.0
-  in_channels: 4
+  in_channels: 5
   out_channels: 2
   model_channels: 128
   num_head_channels: -1
@@ -43,7 +43,7 @@ model:
   
   # conditions
   num_classes: 0
-  concat_channels: 3
+  concat_channels: 4
   guidance_drop_prob: 0.1
   missing_class_value: null
 

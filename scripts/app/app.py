@@ -17,7 +17,7 @@ st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 from scripts.app.data_manager import DataManager, handle_datamanagement_toggle_buttons
 from app.show_images import show_image
 from app.utils.slider_utils import get_slider_parameters, get_square_and_mask
-from app.utils.state_utils import initialize_states, handle_visibility_toggle_buttons, reset_session_state
+from app.utils.state_utils import initialize_states, handle_visibility_toggle_buttons
 from app.utils.metric_utils import handle_metric_toggle_buttons
 from app.utils.inpaint_utils import handle_inpaint_toggle_buttons
 import app.utils.general_utils
@@ -27,7 +27,7 @@ import app.show_images
 import app.data_manager
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 def reload_modules():

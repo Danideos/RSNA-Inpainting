@@ -53,7 +53,7 @@ def inpaint_images(model, img_tensors, mask_tensors, masks, args, noise_shape, d
         inp_noise = torch.randn((max_index - i, *noise_shape), device=device).half() if device == 'cuda' else torch.randn((max_index - i, *noise_shape), device=device).float()
         mask_batch = masks[i:max_index].to(device).half() if device == 'cuda' else masks[i:max_index].to(device).float()
         mask_tensors_batch = mask_tensors[i:max_index].to(device).half() if device == 'cuda' else mask_tensors[i:max_index].to(device).float()
-      
+
         inpainted_batch = model.predict(
             inp_noise,
             model_kwargs={"concat": mask_tensors_batch},
