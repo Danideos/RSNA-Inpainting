@@ -106,11 +106,11 @@ def batch_inpaint(input_dir, output_dir, model, batch_size=100):
             save_comparison_images(img_tensors[i], inpainted_img, output_path)
 
 if __name__ == "__main__":
-    input_dir = "/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train/ID_0b8e8f6997"  # Replace with your directory
-    output_dir = "/research/Data/DK_RSNA_HM/series_stage_1_test/unhealthy/parameter_train/ID_0b8e8f6997/predicted"  # Replace with your output directory
+    input_dir = ""  # Replace with your directory
+    output_dir = ""  # Replace with your output directory
 
-    model = DiffusionModule("/research/projects/DanielKaiser/RSNA_Inpainting/config.yaml")
-    model.load_ckpt("/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/AnoRemove+2.5D_2A100-epoch=11-step=43764-val_loss=0.002329.ckpt", ema=True)
+    model = DiffusionModule("./config.yaml")
+    model.load_ckpt("./model-path.ckpt", ema=True)
     model.cuda().half()
     model.eval()
 

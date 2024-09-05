@@ -13,8 +13,6 @@ venv/
 # Project-specific Files and Directories
 outputs/
 scripts/app/outputs/*
-series_label_counts_test.pkl
-series_to_slices_test.pkl
 
 # Testing and Experimentation Scripts
 scripts/testing/*

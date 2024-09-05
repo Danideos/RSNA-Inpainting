@@ -46,7 +46,7 @@ def main(csv_file_path, nii_directory):
 
 
 if __name__ == "__main__":
-    csv_file_path = "/research/Data/CQ500_Brain_Hemorrhage_Dataset/Bounding_Box_Labels/2_Extrapolation_to_All_Series.csv"  # Replace with your CSV file path
-    nii_directory = "/research/Data/DK_RSNA_HM/cq500_prepared_data/mask_nifti"  # Replace with your .nii.gz directory path
+    csv_file_path = ""  # Replace with your CSV file path
+    nii_directory = ""  # Replace with your .nii.gz directory path
 
     main(csv_file_path, nii_directory)

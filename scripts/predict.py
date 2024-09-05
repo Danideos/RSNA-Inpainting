@@ -132,8 +132,8 @@ def compute_metrics(original_img, inpainted_imgs):
 def main(args, img_size=512, resize_size=256):
     assert(args.output_dir is not None)
     os.makedirs(args.output_dir, exist_ok=True)
-    config_path = "/home/bje01/Documents/inpainting/config.yaml"
-    model_path = "/home/bje01/Documents/inpainting/outputs/pl/last.ckpt"
+    config_path = ""
+    model_path = ""
     device = 'cuda' if not args.use_cpu and torch.cuda.is_available() else 'cpu'
     model = prepare_model(config_path, model_path, device=device)
     print("Model loaded successfully!")

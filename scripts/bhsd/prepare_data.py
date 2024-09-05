@@ -4,11 +4,11 @@ import nibabel as nib
 from tqdm import tqdm
 
 # Define paths
-input_dir = "/research/Data/DK_RSNA_HM/BHSD"
+input_dir = ""
 ground_truth_dir = os.path.join(input_dir, "ground truths")
 images_dir = os.path.join(input_dir, "images")
-output_images_dir = "/research/Data/DK_RSNA_HM/BHSD/NIFTI_IMAGES"
-output_annotations_dir = "/research/Data/DK_RSNA_HM/BHSD/NIFTI_ANNOTATIONS"
+output_images_dir = ""
+output_annotations_dir = ""
 
 # Create the output directories if they don't exist
 os.makedirs(output_images_dir, exist_ok=True)

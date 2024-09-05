@@ -11,9 +11,6 @@ import pickle
 
 
 def preprocess_dicom_dir(dcm_dir, png_dir, filter, csv_path, series):
-    # dd = "/research/projects/DanielKaiser/RSNA_Inpainting/temporary_processing_directory_003a_450000:"
-    # process_nifti_directory(png_dir, "healthy", dd + "/nii_healthy", dd + "/mask_healthy", dcm_dir, threshold_fraction=0.03, test_fraction=0.0, n_jobs=-1)
-
     with tempfile.TemporaryDirectory() as tmpdir:
         nii_healthy_dir = os.path.join(tmpdir, "nii_healthy/")
         os.makedirs(nii_healthy_dir, exist_ok=True)
@@ -23,7 +20,7 @@ def preprocess_dicom_dir(dcm_dir, png_dir, filter, csv_path, series):
         os.makedirs(mask_healthy_dir, exist_ok=True)
         mask_unhealthy_dir = os.path.join(tmpdir, "mask_unhealthy/")
         os.makedirs(mask_unhealthy_dir, exist_ok=True)
-        weight_path = "/home/bje01/Documents/RSNA-Inpainting/scripts/CT_BET_GPU/unet_CT_SS_20171114_170726.h5"
+        weight_path = "./unet_CT_SS_20171114_170726.h5" # Download weights from CT_BET repo
         if not series:
             filtered_dir = os.path.join(tmpdir, "filtered/")
             os.makedirs(filtered_dir, exist_ok=True)
@@ -44,21 +41,19 @@ def preprocess_dicom_dir(dcm_dir, png_dir, filter, csv_path, series):
             unet_ct_ss_main(nii_healthy_dir, mask_healthy_dir, weight_path)
             process_nifti_directory(png_dir, "healthy", nii_healthy_dir, mask_healthy_dir, dcm_dir, threshold_fraction=0.03, test_fraction=0.0, n_jobs=-1)
         else:
-            # # series_to_slices = get_series_slice_mapping(dcm_dir)
-            # # series_label_counts = analyze_csv(csv_path, series_to_slices)
-            # # Load the series_to_slices dictionary
-            # with open('/research/projects/DanielKaiser/RSNA_Inpainting/series_to_slices_test.pkl', 'rb') as f:
-            #     series_to_slices = pickle.load(f)
+            # Load the series_to_slices dictionary
+            with open('./assets/series_to_slices_test.pkl', 'rb') as f:
+                series_to_slices = pickle.load(f)
 
-            # # Load the series_label_counts dictionary
-            # with open('/research/projects/DanielKaiser/RSNA_Inpainting/series_label_counts_test.pkl', 'rb') as f:
-            #     series_label_counts = pickle.load(f)
+            # Load the series_label_counts dictionary
+            with open('./assets/series_label_counts_test.pkl', 'rb') as f:
+                series_label_counts = pickle.load(f)
 
-            # dicom_to_nifti(dcm_dir, nii_healthy_dir, num_jobs=-1, series=True, healthy=True, series_to_slices=series_to_slices, series_label_counts=series_label_counts)
-            # unet_ct_ss_main(nii_healthy_dir, mask_healthy_dir, weight_path, series=True)
-            # process_nifti_directory(png_dir, "healthy", nii_healthy_dir, mask_healthy_dir, dcm_dir, threshold_fraction=0.03, test_fraction=0.0, n_jobs=-1, series=True)
+            dicom_to_nifti(dcm_dir, nii_healthy_dir, num_jobs=-1, series=True, healthy=True, series_to_slices=series_to_slices, series_label_counts=series_label_counts)
+            unet_ct_ss_main(nii_healthy_dir, mask_healthy_dir, weight_path, series=True)
+            process_nifti_directory(png_dir, "healthy", nii_healthy_dir, mask_healthy_dir, dcm_dir, threshold_fraction=0.03, test_fraction=0.0, n_jobs=-1, series=True)
 
-            # dicom_to_nifti(dcm_dir, nii_unhealthy_dir, num_jobs=-1, series=True, healthy=False, series_to_slices=series_to_slices, series_label_counts=series_label_counts)
+            dicom_to_nifti(dcm_dir, nii_unhealthy_dir, num_jobs=-1, series=True, healthy=False, series_to_slices=series_to_slices, series_label_counts=series_label_counts)
             nii_dir = '/home/bje01/Documents/Data/archive/images'
             unet_ct_ss_main(nii_dir, mask_unhealthy_dir, weight_path, series=True)
             process_nifti_directory(png_dir, "unhealthy", nii_dir, mask_unhealthy_dir, dcm_dir, threshold_fraction=0.03, test_fraction=0.0, n_jobs=-1, series=True)

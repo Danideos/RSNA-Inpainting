@@ -75,9 +75,9 @@ def convert_dicom_to_nifti(input_dir, output_dir, num_workers, sop_uids):
         list(tqdm(pool.imap(process_dicom_wrapper, args), total=len(dicom_files), desc="Processing DICOM files"))
 
 # Define input and output directories
-input_directory = "/research/Data/CQ500_Brain_Hemorrhage_Dataset/CT_DICOMs"
-output_directory = "/research/Data/DK_RSNA_HM/cq500_prepared_data/nifti_all_v2"
-csv_file_path = "/research/Data/CQ500_Brain_Hemorrhage_Dataset/Bounding_Box_Labels/3_Extrapolation_to_Selected_Series.csv"  # Replace with the path to your CSV file
+input_directory = ""
+output_directory = ""
+csv_file_path = ""  # Replace with the path to your CSV file
 
 # Load SOPInstanceUIDs from the CSV file
 sop_uids = load_sop_uids_from_csv(csv_file_path)

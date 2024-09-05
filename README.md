@@ -5,11 +5,12 @@ Diffusion models have shown state-of-the-art performance on a number of image [i
 The core idea is that after the inpainting model learns on healthy distribution of brain CT images, it will be able to accurately inpaint healthy areas, which then can be compared to the original areas and thus anomalies can be detected in case of big differences.
 
 <p align="center">
-  <img src="assets/inpainting_example_0.png" width="30%" />
-  <img src="assets/inpainting_example_1.png" width="30%" />
-  <img src="assets/inpainting_example_2.png" width="30%" />
+  <img src="assets/inpainting_example_0.png" width="45%" />
 </p>
-
+<p align="center">
+  <img src="assets/inpainting_example_1.png" width="45%" />
+  <img src="assets/inpainting_example_2.png" width="45%" />
+</p>
 
 ## Methodology 
 
@@ -50,11 +51,34 @@ Even with the best inpainting settings, false positives occur way too often on h
 
 ## Installation
 
-To install this project, I suggest using mamba as solving the enviroment with miniconda might take a while.
-
+To install this project follow:
 ```bash
-git clone https://github.com/yourusername/yourproject.git
-cd yourproject
+git clone https://github.com/Danideos/RSNA-Inpainting.git
+cd RSNA-Inpainting
 ```
-sdawda
+I suggest using mamba as solving the enviroment with miniconda might take a while
+```bash
+mamba env create -f environment.yaml
+conda activate rsna_inpainting
+```
 
+## Usage
+
+### Running inference
+To use the thresholding tool, setup your `.env` file, according to `.env.template`, `WANDB_API_KEY` is not neccessary for now.
+The model can be downloaded from [google drive](https://drive.google.com/file/d/1al0tLux7dBmPWVjMSnc3TpQQyhpsqcWe/view?usp=sharing). 
+```bash
+streamlit run scripts/app/app.py
+```
+
+### Preprocessing and training
+To preprocess data, download RSNA dataset from [kaggle](https://www.kaggle.com/c/rsna-intracranial-hemorrhage-detection) and run:
+```bash
+python scripts/preprocess.py --input_dir "./path-to-dicom-slices" --preprocessed_dir "./output-dir" --csv_path "./path_to_csv" --series --filter
+```
+
+
+For model training run, reference [mediffusion](https://github.com/BardiaKh/Mediffusion) repositary for usage:
+```bash
+python scripts/train.py --input_dir "./path-to-preprocessed-dataset" 
+```

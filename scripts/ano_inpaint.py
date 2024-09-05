@@ -136,15 +136,15 @@ def create_inpainted_images(input_dir, output_dir, model, num_images=100, batch_
 
 
 if __name__ == "__main__":
-    input_dir = "/research/Data/DK_RSNA_HM/prepared_data_stage_1/healthy/train"  # Replace with your directory
+    input_dir = ""  # Replace with your directory
     output_dir = input_dir  # Assuming the output dir is the same as input dir
     num_images = 100  # Total number of images to inpaint
     batch_size = 100  # Process 100 images at a time
     n = 11  # Number of partitions
     partitions = [9,10]  # Partitions to process (0-indexed)
 
-    model = DiffusionModule("/research/projects/DanielKaiser/RSNA_Inpainting/config.yaml")
-    model.load_ckpt("/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/ICH_Inpainting_4A100-epoch=359-step=30600-val_loss=0.004333.ckpt", ema=True)
+    model = DiffusionModule("./config.yaml")
+    model.load_ckpt("", ema=True)
     model.cuda().half()
     model.eval()
 

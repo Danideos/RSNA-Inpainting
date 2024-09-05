@@ -56,7 +56,7 @@ def train(input_dir, resume=False):
             with_condition=True,
         )
     else:
-        model_path = "/research/projects/DanielKaiser/RSNA_Inpainting/outputs/pl/EM(FE,G5,T1.5)_2A100-epoch=7-step=36472-val_loss=0.000855.ckpt"
+        model_path = "./model-path"
         model = DiffusionModule(
             "./config.yaml",
             train_ds=train_ds,

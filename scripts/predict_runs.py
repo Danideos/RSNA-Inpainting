@@ -6,7 +6,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 def run_inpainting(run_config):
     command = [
-        "python", "/research/projects/DanielKaiser/RSNA_Inpainting/scripts/predict.py",  # replace "inpainting_script.py" with the actual name of your inpainting script
+        "python", "",  # replace "inpainting_script.py" with the actual name of your inpainting script
         "--preprocessed_dir", run_config["preprocessed_dir"],
         "--output_dir", run_config["output_dir"],
         "--num_images", str(run_config["num_images"]),
@@ -27,7 +27,7 @@ def run_inpainting(run_config):
     subprocess.run(command)
 
 def main():
-    with open("/research/projects/DanielKaiser/RSNA_Inpainting/predict_config.yaml", "r") as file:
+    with open("", "r") as file:
         config = yaml.safe_load(file)
 
     for run_config in config["runs"]:

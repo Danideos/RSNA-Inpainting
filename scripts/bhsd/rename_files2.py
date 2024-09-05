@@ -1,7 +1,7 @@
 import os
 
 # Path to the directory containing the files
-directory = "/research/Data/DK_RSNA_HM/BHSD/healthy/train/bet_png"
+directory = ""
 
 # Iterate over all the files in the directory
 for filename in os.listdir(directory):

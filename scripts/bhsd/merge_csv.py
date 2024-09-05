@@ -1,7 +1,7 @@
 
-csv_file_1 = "/research/Data/DK_RSNA_HM/BHSD/bounding_boxes.csv"
-csv_file_2 = "/research/Data/DK_RSNA_HM/cq500_prepared_data/bounding_boxes_bhx.csv"
-output_csv_path = "/research/Data/DK_RSNA_HM/cq500_prepared_data/bounding_boxes_concat.csv"
+csv_file_1 = ""
+csv_file_2 = ""
+output_csv_path = ""
 
 import pandas as pd
 import re

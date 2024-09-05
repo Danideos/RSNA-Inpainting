@@ -2,8 +2,8 @@ import os
 import shutil
 
 # Define source and destination directories
-source_dir = '/research/Data/DK_RSNA_HM/BHSD/healthy/train/mask_png'
-destination_dir = '/research/Data/DK_RSNA_HM/cq500_prepared_data/unhealthy/train/mask_png'
+source_dir = ''
+destination_dir = ''
 
 # Create the destination directory if it doesn't exist
 if not os.path.exists(destination_dir):
